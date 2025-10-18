@@ -566,13 +566,14 @@ def main():
                 # Use pre-encoded latents or encode images on-the-fly
                 if 'latents' in batch:
                     # Pre-encoded latents (fast, low memory)
-                    # Use the weight dtype from accelerator (bf16 for H100)
+                    # Latents are saved as float32 for stability, convert to training precision
                     weight_dtype = torch.float32
                     if accelerator.mixed_precision == "fp16":
                         weight_dtype = torch.float16
                     elif accelerator.mixed_precision == "bf16":
                         weight_dtype = torch.bfloat16
                     
+                    # Load latents (come as float32, convert to proper dtype)
                     latents = batch['latents'].to(accelerator.device, dtype=weight_dtype)
                     
                     # Check for NaN or Inf in latents (corrupted pre-encoded data)

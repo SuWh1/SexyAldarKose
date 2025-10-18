@@ -79,6 +79,9 @@ def preprocess_latents(config, manifest_path: str = None):
     # Process each image
     logger.info(f"Processing {len(manifest['samples'])} images to latents...")
     
+    successful = 0
+    failed = 0
+    
     for idx, sample in enumerate(tqdm(manifest['samples'], desc="Encoding to latents")):
         # Get image path
         image_path = sample.get('processed_path') or sample['image_path']
@@ -87,6 +90,7 @@ def preprocess_latents(config, manifest_path: str = None):
         latent_path = latents_dir / f"{Path(image_path).stem}_latent.pt"
         if latent_path.exists():
             sample['latent_path'] = str(latent_path)
+            successful += 1
             continue
         
         try:
@@ -102,13 +106,25 @@ def preprocess_latents(config, manifest_path: str = None):
             # Remove batch dimension for single image saving
             latent = latent.squeeze(0)
             
-            # Save latent
-            torch.save(latent.cpu(), str(latent_path))
+            # Validate latent before saving (check for NaN/Inf)
+            if torch.isnan(latent).any() or torch.isinf(latent).any():
+                logger.warning(f"Skipping {image_path}: latent contains NaN/Inf")
+                failed += 1
+                continue
+            
+            # Save latent as float32 (more stable) and move to CPU
+            latent_fp32 = latent.float().cpu()
+            torch.save(latent_fp32, str(latent_path))
             sample['latent_path'] = str(latent_path)
+            successful += 1
             
         except Exception as e:
             logger.warning(f"Failed to process {image_path}: {e}")
+            failed += 1
             continue
+    
+    logger.info(f"Successfully encoded: {successful} latents")
+    logger.info(f"Failed: {failed} latents")
     
     # Save updated manifest with latent paths
     updated_manifest_path = Path(config['output_dir']) / 'dataset_manifest_with_latents.json'
