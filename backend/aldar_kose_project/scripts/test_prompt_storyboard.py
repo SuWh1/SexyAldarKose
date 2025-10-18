@@ -16,53 +16,55 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SCENE_BREAKDOWN_SYSTEM_PROMPT = """You are an expert storyboard artist and cinematographer specializing in visual storytelling.
+SCENE_BREAKDOWN_SYSTEM_PROMPT = """You are an expert storyboard artist specializing in clear, simple visual storytelling.
 
-Your task is to break down a story description into 6-10 distinct, visually compelling scenes for a storyboard.
+Your task is to break down a story into 6-10 distinct, SIMPLE scenes for image generation.
 
-IMPORTANT RULES:
-1. Each scene should be a DIFFERENT moment in the story - show PROGRESSION
-2. Focus on ACTION, SETTING, EMOTION, and CINEMATOGRAPHY
+CRITICAL RULES:
+1. Keep descriptions SIMPLE and CLEAR - focus on ONE main action per scene
+2. Each scene should be DIFFERENT - show story PROGRESSION
 3. DO NOT mention clothing, outfits, costumes, or physical appearance
-4. Include camera angles and shot types for variety (close-up, wide shot, medium shot, POV, etc.)
-5. Include artistic direction (lighting, mood, atmosphere)
+4. Use basic camera angles: wide shot, close-up, medium shot
+5. Include simple lighting: daylight, sunset, indoor lighting
 6. Make scenes visually distinct from each other
 
 The character is "aldar_kose_man" - a clever trickster from Kazakh folklore.
 
-Story Structure Guidelines:
-- Opening: Establish setting and character
-- Rising Action: Show the journey/conflict/trick developing
-- Climax: The key moment of the story
-- Resolution: The outcome
-- Closing: Final emotional beat
+DESCRIPTION STYLE - Keep it SHORT and SIMPLE:
+✅ GOOD (simple, clear):
+- "aldar_kose_man riding horse, steppe landscape, wide shot"
+- "aldar_kose_man smiling, close-up, sunset lighting"
+- "aldar_kose_man entering yurt, medium shot, warm light"
 
-Camera Variety:
-- Wide shots for establishing scenes
-- Close-ups for emotional moments
-- Medium shots for action
-- Dynamic angles for dramatic moments
+❌ BAD (too complex, verbose):
+- "aldar_kose_man atop his noble steed, silhouetted against the vast and infinite steppe stretching to the horizon"
+- "aldar_kose_man with a mischievous expression reflecting his cunning nature as he approaches the merchant"
 
-Return your response as a JSON array with this structure:
+Story Structure:
+- Opening: Establish where character is
+- Middle: Show the action/journey
+- Ending: Show the result
+
+Return your response as a JSON array:
 [
     {
         "frame": 1,
-        "description": "aldar_kose_man riding horse across vast steppe, wide establishing shot, golden hour lighting, sense of adventure",
+        "description": "aldar_kose_man riding horse, steppe landscape, wide shot",
         "camera": "wide shot",
-        "mood": "adventurous"
+        "mood": "traveling"
     },
     {
         "frame": 2,
-        "description": "aldar_kose_man approaching traditional yurt in distance, medium shot from behind, sunset casting long shadows",
+        "description": "aldar_kose_man approaching yurt, medium shot, sunset",
         "camera": "medium shot",
-        "mood": "anticipation"
+        "mood": "arriving"
     }
 ]
 
-Remember: NEVER mention clothing, costumes, or physical appearance. Focus on what's HAPPENING, WHERE, and HOW it's SHOT."""
+Remember: SIMPLE descriptions work best for image generation. Focus on ACTION + LOCATION + CAMERA ANGLE."""
 
 
-def test_story_breakdown(story: str, num_frames: int = 8):
+def test_story_breakdown(story: str, max_frames: int = 10):
     """Test the story breakdown without generating images"""
     
     api_key = os.getenv("OPENAI_API_KEY")
@@ -77,20 +79,37 @@ def test_story_breakdown(story: str, num_frames: int = 8):
     print("TESTING PROMPT-BASED STORYBOARD BREAKDOWN")
     print("=" * 70)
     print(f"\nStory: {story}")
-    print(f"Frames: {num_frames}\n")
+    print(f"Max frames: {max_frames} (GPT-4 will decide optimal count)\n")
     
-    user_prompt = f"""Break down the following story into exactly {num_frames} distinct, visually compelling scenes for a storyboard.
+    user_prompt = f"""Break down the following story into a storyboard with the OPTIMAL number of scenes.
 
 Story: "{story}"
 
-Remember:
-- {num_frames} scenes showing PROGRESSION through the story
-- Each scene should be visually DIFFERENT
-- Include camera angles and lighting
-- Focus on ACTION and SETTING, NOT clothing or appearance
+INSTRUCTIONS:
+- Decide how many scenes needed (minimum 6, maximum {max_frames})
+- Simple stories: 6-7 scenes, Medium: 8-9 scenes, Complex: 10 scenes
+- Keep descriptions SHORT and SIMPLE (max 10-12 words each)
+- Focus on: ACTION + LOCATION + CAMERA ANGLE only
+- Each scene must be DIFFERENT and show PROGRESSION
 - Use "aldar_kose_man" as the character identifier
+- NO clothing, costumes, or complex metaphors
 
-Return ONLY a valid JSON array with the structure specified in the system prompt."""
+EXAMPLES OF SIMPLE DESCRIPTIONS:
+✅ "aldar_kose_man riding horse, steppe landscape, wide shot"
+✅ "aldar_kose_man entering yurt, medium shot, sunset lighting"
+✅ "aldar_kose_man laughing, close-up, warm light"
+❌ "aldar_kose_man atop noble steed silhouetted against infinite horizon" (too complex!)
+
+Return JSON object:
+{{
+  "num_scenes": <number>,
+  "reasoning": "<why this number>",
+  "scenes": [
+    {{"frame": 1, "description": "simple action + location + camera", "camera": "wide shot", "mood": "one word"}},
+    {{"frame": 2, "description": "...", "camera": "...", "mood": "..."}},
+    ... ({max_frames} max)
+  ]
+}}"""
 
     try:
         print("🔄 Calling OpenAI API...")
@@ -101,6 +120,7 @@ Return ONLY a valid JSON array with the structure specified in the system prompt
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.7,
+            max_tokens=2000,
             response_format={"type": "json_object"}
         )
         
@@ -108,6 +128,13 @@ Return ONLY a valid JSON array with the structure specified in the system prompt
         
         # Parse JSON
         result = json.loads(content)
+        
+        # Extract metadata
+        num_scenes_decided = result.get("num_scenes", None)
+        reasoning = result.get("reasoning", "Not provided")
+        
+        print(f"✓ GPT-4 Decision: {num_scenes_decided} scenes")
+        print(f"✓ Reasoning: {reasoning}\n")
         
         # Handle different response structures
         if isinstance(result, dict) and "scenes" in result:
@@ -142,15 +169,17 @@ Return ONLY a valid JSON array with the structure specified in the system prompt
         print("\nTo generate the full storyboard with images, run:")
         print(f'python scripts/prompt_storyboard.py \\')
         print(f'    --lora-path outputs/checkpoints/checkpoint-400 \\')
-        print(f'    --story "{story}" \\')
-        print(f'    --num-frames {num_frames}')
+        print(f'    --story "{story}"')
+        print(f'# GPT-4 will decide optimal frame count (decided: {num_scenes_decided})')
         print("=" * 70 + "\n")
         
         # Save to file
         with open("test_scene_breakdown.json", "w", encoding="utf-8") as f:
             json.dump({
                 "story": story,
-                "num_frames": num_frames,
+                "max_frames": max_frames,
+                "num_scenes_decided": num_scenes_decided,
+                "reasoning": reasoning,
                 "scenes": scenes
             }, f, indent=2, ensure_ascii=False)
         
@@ -193,11 +222,11 @@ if __name__ == "__main__":
         print("❌ Invalid choice!")
         exit(1)
     
-    num_frames = input("\nNumber of frames (6-10, default 8): ").strip()
-    num_frames = int(num_frames) if num_frames else 8
+    max_frames = input("\nMax frames (6-10, default 10 - GPT decides): ").strip()
+    max_frames = int(max_frames) if max_frames else 10
     
-    if num_frames < 6 or num_frames > 10:
-        print("❌ Number of frames must be between 6 and 10!")
+    if max_frames < 6 or max_frames > 10:
+        print("❌ Max frames must be between 6 and 10!")
         exit(1)
     
-    test_story_breakdown(story, num_frames)
+    test_story_breakdown(story, max_frames)
