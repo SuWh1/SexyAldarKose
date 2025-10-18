@@ -95,14 +95,19 @@ CRITICAL RULES:
    - MUST show face clearly from the front (never from back, side, or obscured)
    - Character should be PROPERLY VISIBLE (not zoomed too close, not too far)
    - Include ALL key story elements in Frame 1 (e.g., if story has horse, show horse)
-   - Examples: "aldar_kose_man portrait with horse, looking at camera, steppe background, front-facing"
+   - Examples: "aldar_kose_man portrait with brown horse, looking at camera, steppe background, front-facing"
 4. FRAMES 2+: Ensure aldar_kose_man is PROPERLY VISIBLE and recognizable in each frame
 5. **STORY ELEMENT CONSISTENCY**: Maintain ALL key story elements throughout frames
    - If story mentions a HORSE → include horse in ALL relevant frames (riding, racing, with horse, etc.)
+   - **IMPORTANT**: Add CONSISTENT VISUAL DESCRIPTORS for recurring elements to maintain appearance
+     - For horses: specify color/type (e.g., "brown horse", "white horse", "dark horse")
+     - For merchants: specify appearance (e.g., "bearded merchant", "old merchant")
+     - For objects: specify details (e.g., "golden bag", "wooden cart")
+   - Use the SAME descriptor in ALL frames (e.g., if Frame 1 has "brown horse", ALL frames must say "brown horse")
    - If story mentions a MERCHANT → keep merchant present in relevant frames
    - If story has OBJECTS (bag, gold, etc.) → track them through the story
    - Do NOT drop important story elements halfway through
-   - Key elements should appear from Frame 1 and persist throughout
+   - Key elements should appear from Frame 1 and persist throughout with SAME descriptors
 6. **BACKGROUND CONSISTENCY**: Keep the background/setting CONSISTENT across frames
    - If story starts in steppe, keep steppe background unless story explicitly changes location
    - If story is at a bazaar, keep bazaar setting throughout
@@ -116,41 +121,43 @@ CRITICAL RULES:
 
 The character is "aldar_kose_man" - a clever trickster from Kazakh folklore.
 
-FRAME 1 EXAMPLES (MANDATORY front-facing reference with ALL key elements):
-- "aldar_kose_man portrait with horse, looking at camera, steppe background, front-facing"
-- "aldar_kose_man facing camera next to merchant, bazaar background, front-facing"
-- "aldar_kose_man looking forward, yurt setting, portrait, front-facing"
+FRAME 1 EXAMPLES (MANDATORY front-facing reference with ALL key elements AND descriptors):
+- "aldar_kose_man portrait with brown horse, looking at camera, steppe background, front-facing"
+- "aldar_kose_man facing camera next to bearded merchant, bazaar background, front-facing"
+- "aldar_kose_man looking forward with white horse, yurt setting, portrait, front-facing"
 
-GOOD STORY ELEMENT CONSISTENCY EXAMPLES:
+GOOD STORY ELEMENT CONSISTENCY EXAMPLES (with consistent descriptors):
 
-Story with HORSE (race):
-  Frame 1: "aldar_kose_man portrait with horse, steppe background, front-facing"
-  Frame 2: "aldar_kose_man mounting horse, steppe background"
-  Frame 3: "aldar_kose_man riding horse in race, steppe background"
-  Frame 4: "aldar_kose_man racing on horse, steppe background"
-  Frame 5: "aldar_kose_man on horse crossing finish, steppe background"
-  Frame 6: "aldar_kose_man celebrating on horse, steppe background"
+Story with HORSE (race) - Notice "brown horse" used consistently:
+  Frame 1: "aldar_kose_man portrait with brown horse, steppe background, front-facing"
+  Frame 2: "aldar_kose_man mounting brown horse, steppe background"
+  Frame 3: "aldar_kose_man riding brown horse in race, steppe background"
+  Frame 4: "aldar_kose_man racing on brown horse, steppe background"
+  Frame 5: "aldar_kose_man on brown horse crossing finish, steppe background"
+  Frame 6: "aldar_kose_man celebrating on brown horse, steppe background"
   ✅ Horse present in ALL frames
+  ✅ SAME descriptor "brown horse" in ALL frames (ensures color consistency)
 
-Story with MERCHANT (trick):
-  Frame 1: "aldar_kose_man portrait with merchant, bazaar background, front-facing"
-  Frame 2: "aldar_kose_man talking to merchant, bazaar background"
-  Frame 3: "aldar_kose_man showing goods to merchant, bazaar background"
-  Frame 4: "aldar_kose_man receiving gold from merchant, bazaar background"
+Story with MERCHANT (trick) - Notice "bearded merchant" used consistently:
+  Frame 1: "aldar_kose_man portrait with bearded merchant, bazaar background, front-facing"
+  Frame 2: "aldar_kose_man talking to bearded merchant, bazaar background"
+  Frame 3: "aldar_kose_man showing goods to bearded merchant, bazaar background"
+  Frame 4: "aldar_kose_man receiving gold from bearded merchant, bazaar background"
   ✅ Merchant present in ALL frames
+  ✅ SAME descriptor "bearded merchant" in ALL frames
 
-BAD EXAMPLES (dropping story elements - NEVER DO THIS):
+BAD EXAMPLES (dropping story elements OR changing descriptors - NEVER DO THIS):
 ❌ Story: "Aldar winning race with horse"
-  Frame 1: aldar_kose_man with horse
-  Frame 2: aldar_kose_man riding horse
-  Frame 3: aldar_kose_man racing (NO HORSE - WRONG!)
+  Frame 1: aldar_kose_man with brown horse
+  Frame 2: aldar_kose_man riding horse (MISSING COLOR!)
+  Frame 3: aldar_kose_man racing on white horse (WRONG COLOR!)
   Frame 4: aldar_kose_man running (NO HORSE - WRONG!)
-  Frame 5: aldar_kose_man celebrating (NO HORSE - WRONG!)
-
+  
 ❌ Story: "Aldar tricks merchant"
-  Frame 1: aldar_kose_man with merchant
-  Frame 2: aldar_kose_man talking (NO MERCHANT - WRONG!)
-  Frame 3: aldar_kose_man alone (NO MERCHANT - WRONG!)
+  Frame 1: aldar_kose_man with old merchant
+  Frame 2: aldar_kose_man talking to merchant (MISSING DESCRIPTOR!)
+  Frame 3: aldar_kose_man with young merchant (WRONG DESCRIPTOR!)
+  Frame 4: aldar_kose_man alone (NO MERCHANT - WRONG!)
 
 GOOD BACKGROUND CONSISTENCY EXAMPLES:
 Story in steppe:
@@ -264,26 +271,32 @@ Story: "{story}"
 CRITICAL INSTRUCTIONS:
 1. **IDENTIFY KEY STORY ELEMENTS FIRST**:
    - List ALL important elements: characters (horse, merchant, etc.), objects (gold, bag, etc.), setting
+   - For each element, assign a CONSISTENT VISUAL DESCRIPTOR that will be used in ALL frames
+   - Examples:
+     - Horse → choose descriptor: "brown horse", "white horse", "dark horse", "grey horse"
+     - Merchant → choose descriptor: "bearded merchant", "old merchant", "wealthy merchant"
+     - Object → choose descriptor: "golden bag", "wooden cart", "silver coins"
+   - Once chosen, use EXACT SAME descriptor in every single frame
    - These elements MUST appear consistently throughout ALL relevant frames
-   - Example: If story has "horse" → horse must appear in ALL frames (riding, racing, celebrating on horse)
-   - Example: If story has "merchant" → merchant must be present in ALL frames of the interaction
 
 2. **FRAME 1 MUST BE A REFERENCE SHOT**: 
-   - Frame 1 establishes character identity AND key story elements
+   - Frame 1 establishes character identity AND key story elements WITH their descriptors
    - MUST be a clear FRONT-FACING portrait showing aldar_kose_man's FACE
-   - MUST include ALL key story elements visible in Frame 1
+   - MUST include ALL key story elements with their DESCRIPTORS visible in Frame 1
    - NEVER from back, side, silhouette, or distance
    - Character should be PROPERLY VISIBLE (not too zoomed in)
    - MUST include clear background/setting
-   - Example for race story: "aldar_kose_man portrait with horse, steppe background, front-facing"
-   - Example for merchant story: "aldar_kose_man portrait with merchant, bazaar background, front-facing"
+   - Example for race story: "aldar_kose_man portrait with brown horse, steppe background, front-facing"
+   - Example for merchant story: "aldar_kose_man portrait with bearded merchant, bazaar background, front-facing"
 
-3. **STORY ELEMENT PERSISTENCE**:
-   - Once you introduce an element (horse, merchant, object), keep it in ALL subsequent relevant frames
+3. **STORY ELEMENT PERSISTENCE WITH CONSISTENT DESCRIPTORS**:
+   - Once you introduce an element with descriptor, keep BOTH in ALL subsequent relevant frames
    - DO NOT drop elements halfway through the story
-   - Track each element through the entire narrative
-   - Example: Race story → horse in frames 1, 2, 3, 4, 5, 6 (NOT just 1, 2, 3 then disappearing)
-   - Example: Trick story → merchant in all frames where interaction happens
+   - DO NOT change descriptors (e.g., don't switch from "brown horse" to "white horse")
+   - Track each element with its EXACT descriptor through the entire narrative
+   - Example: Race story → "brown horse" in frames 1, 2, 3, 4, 5, 6 (NOT "horse", "brown horse", "white horse")
+   - Example: Trick story → "bearded merchant" in all frames where interaction happens
+   - Consistent descriptors = consistent appearance in generated images
 
 4. **BACKGROUND CONSISTENCY**:
    - Identify the PRIMARY SETTING from the story (steppe, bazaar, yurt, mountain, village, etc.)
