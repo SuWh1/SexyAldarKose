@@ -1,6 +1,14 @@
-# Landing Page
+# Aldar Köse Storyboard Generator
 
-A clean, modern landing page built with React, Vite, and TypeScript.
+A modern landing page for the ML Track hackathon project built with React, Vite, and TypeScript.
+
+## 🎨 Project
+
+**Aldar Köse Storyboard Generator** — An intelligent system that automatically generates storyboards from short scripts, bringing Aldar Köse's adventures to life through AI-powered visual storytelling.
+
+- **Team:** AldarVision
+- **Event:** Higgsfield AI Hackathon 2025 - ML Track
+- **GitHub:** [SexyAldarKose](https://github.com/SuWh1/SexyAldarKose)
 
 ## 🚀 Features
 
@@ -82,8 +90,8 @@ This is a simple, clean landing page ready for customization:
 
 ## 📋 Landing Page Sections
 
-- **Header** - Navigation and branding
-- **Hero** - Main call-to-action section
-- **Solution Overview** - Feature highlights
-- **Team Section** - Team member showcase
-- **Footer** - Contact information and links
+- **Header** - Team branding and navigation
+- **Hero** - Project introduction with key messaging
+- **Our Approach** - Technical pipeline and features
+- **Team Section** - Team members and project highlights
+- **Footer** - Links and event information

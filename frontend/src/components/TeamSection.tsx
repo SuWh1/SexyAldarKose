@@ -1,68 +1,68 @@
-import { Highlight } from './Highlight';
-
 export function TeamSection() {
   return (
-    <section className="py-20" style={{ backgroundColor: '#FFFEEB' }}>
+    <section className="py-20" style={{ backgroundColor: 'rgba(9, 13, 14, 1)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-6">
-          <h2 id="team" className="text-4xl md:text-5xl font-bold mb-6 pt-32 animate-in slide-in-from-bottom duration-800 transition-transform hover:scale-105" style={{ color: '#141414', marginTop: '-8rem' }}>
-            Meet Team <Highlight>Richards</Highlight>
+          <h2 id="team" className="text-4xl md:text-5xl font-bold mb-6 pt-32 animate-in slide-in-from-bottom duration-800" style={{ marginTop: '-8rem', color: 'rgba(209, 254, 23, 1)' }}>
+            Meet Team Richards
           </h2>
-          <p className="text-xl max-w-3xl mx-auto animate-in slide-in-from-bottom duration-800 delay-200 hover:opacity-100 transition-opacity" style={{ color: '#141414', opacity: 0.8 }}>
-            A dedicated team of developers and privacy experts working on 
-            <Highlight>innovative geotrack solutions</Highlight> for Decentrathon 2025
+          <p className="text-xl max-w-3xl mx-auto animate-in slide-in-from-bottom duration-800 delay-200" style={{ color: 'rgba(247, 247, 248, 1)' }}>
+            Passionate ML engineers and storytellers from Nazarbayev University
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {/* Team Stats */}
-          <div className="text-center p-8 bg-white rounded-2xl shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-xl transform cursor-pointer group animate-in slide-in-from-bottom duration-800 delay-300">
-            <div className="text-4xl font-bold mb-2 transition-all duration-500 group-hover:scale-110 group-hover:text-5xl" style={{ color: '#C1F21D' }}>
-              100%
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          {/* Team Members */}
+          <div className="text-center p-8 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer group animate-in slide-in-from-bottom duration-800 delay-300" style={{ backgroundColor: 'rgba(9, 13, 14, 1)' }}>
+            <div className="mb-4 flex justify-center">
+              <img 
+                src="/dauren.webp" 
+                alt="Dauren" 
+                className="w-32 h-32 rounded-full object-cover shadow-lg"
+              />
             </div>
-            <p className="transition-colors duration-300 group-hover:opacity-100" style={{ color: '#141414', opacity: 0.8 }}>
-              Privacy Focused
+            <div className="text-2xl font-bold mb-2" style={{ color: 'rgba(209, 254, 23, 1)' }}>
+              Dauren
+            </div>
+            <p style={{ color: 'rgba(247, 247, 248, 1)' }}>
+              Genius
             </p>
           </div>
           
-          <div className="text-center p-8 bg-white rounded-2xl shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-xl transform cursor-pointer group animate-in slide-in-from-bottom duration-800 delay-500">
-            <div className="text-4xl font-bold mb-2 transition-all duration-500 group-hover:scale-110 group-hover:text-5xl" style={{ color: '#C1F21D' }}>
-              0
+          <div className="text-center p-8 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer group animate-in slide-in-from-bottom duration-800 delay-500" style={{ backgroundColor: 'rgba(9, 13, 14, 1)' }}>
+            <div className="mb-4 flex justify-center">
+              <img 
+                src="/fatikh.webp" 
+                alt="Fatikh" 
+                className="w-32 h-32 rounded-full object-cover shadow-lg"
+              />
             </div>
-            <p className="transition-colors duration-300 group-hover:opacity-100" style={{ color: '#141414', opacity: 0.8 }}>
-              Personal Data Exposed
-            </p>
-          </div>
-          
-          <div className="text-center p-8 bg-white rounded-2xl shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-xl transform cursor-pointer group animate-in slide-in-from-bottom duration-800 delay-700">
-            <div className="text-4xl font-bold mb-2 transition-all duration-500 group-hover:scale-110 group-hover:text-5xl group-hover:rotate-12" style={{ color: '#C1F21D' }}>
-              ∞
+            <div className="text-2xl font-bold mb-2" style={{ color: 'rgba(209, 254, 23, 1)' }}>
+              Fatikh
             </div>
-            <p className="transition-colors duration-300 group-hover:opacity-100" style={{ color: '#141414', opacity: 0.8 }}>
-              Possibilities
+            <p style={{ color: 'rgba(247, 247, 248, 1)' }}>
+              Millionaire
             </p>
           </div>
         </div>
 
         {/* Call to Action */}
         <div className="text-center animate-in slide-in-from-bottom duration-800 delay-900">
-          <div className="p-8 rounded-2xl transition-all duration-300 hover:shadow-xl transform hover:scale-[1.02] group" style={{ backgroundColor: '#C1F21D' }}>
-            <h3 className="text-2xl md:text-3xl font-bold mb-4 transition-transform duration-300 group-hover:scale-105" style={{ color: '#141414' }}>
-              Interested in our <Highlight>work</Highlight>?
+          <div className="p-8 rounded-2xl border-2 transition-all duration-200 hover:border-opacity-80 group" style={{ backgroundColor: 'rgba(9, 13, 14, 1)', borderColor: 'rgba(209, 254, 23, 1)' }}>
+            <h3 className="text-2xl md:text-3xl font-bold mb-4" style={{ color: 'rgba(209, 254, 23, 1)' }}>
+              Interested in our work?
             </h3>
-            <p className="text-lg mb-6 transition-opacity duration-300 group-hover:opacity-100" style={{ color: '#141414', opacity: 0.8 }}>
-              Discover how we're revolutionizing geotrack analytics while protecting privacy
+            <p className="text-lg mb-6" style={{ color: 'rgba(247, 247, 248, 1)' }}>
+              Discover how we're reviving cultural storytelling with AI-powered creativity
             </p>
             <a 
-              href="https://decentrathon.ai/"
+              href="https://github.com/SuWh1/SexyAldarKose"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-4 rounded-lg text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-lg transform group-button inline-block"
-              style={{ backgroundColor: '#141414' }}
+              className="px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-200 hover:brightness-90 inline-block"
+              style={{ backgroundColor: 'rgba(209, 254, 23, 1)', color: 'rgba(9, 13, 14, 1)' }}
             >
-              <span className="transition-transform duration-300 group-button-hover:translate-x-1 inline-block">
-                Learn More →
-              </span>
+              View on GitHub →
             </a>
           </div>
         </div>
