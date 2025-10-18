@@ -12,6 +12,7 @@ That's it! Uses default settings:
 - ✅ Temperature: 0.7
 - ✅ Frames: Auto (GPT decides)
 - ✅ Mode: Simple (faster)
+- ✅ LoRA: checkpoint-1000
 
 ---
 

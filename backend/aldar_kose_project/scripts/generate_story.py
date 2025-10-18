@@ -99,8 +99,8 @@ Examples:
     parser.add_argument(
         '--lora-path',
         type=str,
-        default='outputs/checkpoints/final',
-        help='Path to LoRA checkpoint (default: outputs/checkpoints/final)'
+        default='outputs/checkpoints/checkpoint-1000',
+        help='Path to LoRA checkpoint (default: outputs/checkpoints/checkpoint-1000)'
     )
     
     args = parser.parse_args()
