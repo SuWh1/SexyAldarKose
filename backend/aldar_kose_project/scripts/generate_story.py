@@ -16,6 +16,8 @@ Usage:
 # Suppress library warnings and verbose logging
 import warnings
 import os
+import sys  # FIXED: Import sys before using it
+
 warnings.filterwarnings('ignore', category=UserWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -33,7 +35,6 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from scripts.prompt_storyboard import PromptStoryboardGenerator
-import sys
 import logging
 
 logging.basicConfig(
