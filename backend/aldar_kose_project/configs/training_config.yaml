@@ -12,37 +12,39 @@ processed_dir: "./data/processed_images"
 cache_dir: "./cache"
 
 # Image Processing
-resolution: 512  # Reduced from 1024 to fit in 8GB GPU memory
+resolution: 1024  # Full quality - H100 has plenty of VRAM (80GB)
 center_crop: true
 random_flip: false  # Set to false to maintain identity consistency
 
 # Training Hyperparameters
-batch_size: 1
-gradient_accumulation_steps: 1  # Reduced to 1 to minimize memory (Effective batch size = 1)
+batch_size: 4  # Increased from 1 - H100 can handle it (Effective batch size = 4)
+gradient_accumulation_steps: 1  # No need for accumulation with H100 VRAM
 learning_rate: 1.0e-4
 unet_lr: 1.0e-4
-text_encoder_lr: 5.0e-5  # Lower LR for text encoder
+text_encoder_lr: 5.0e-5
 lr_scheduler: "constant_with_warmup"
 lr_warmup_steps: 100
-max_steps: 20  # Tiny test run - just 20 steps to verify training works
+max_steps: 3000  # Full training run - H100 will complete in ~15-20 minutes
 max_train_epochs: null  # null = use max_steps instead
 
 # LoRA Configuration
-lora_rank: 16  # Reduced from 32 - less capacity but less VRAM (half the parameters)
-lora_alpha: 16  # Usually same as rank
-lora_dropout: 0.0
+lora_rank: 64  # Increased to 64 - H100 has enough VRAM to handle full capacity
+lora_alpha: 32  # Lower alpha for smoother training (half of rank)
+lora_dropout: 0.1  # Add dropout for regularization
 lora_target_modules:
   - "to_q"
-  - "to_v"  # Removed to_k and to_out.0 to save memory
-train_text_encoder: false  # Disable to save GPU memory on 8GB card - train only UNet
+  - "to_k"
+  - "to_v"
+  - "to_out.0"  # Train all attention modules for best quality
+train_text_encoder: true  # Enable text encoder training - massive quality improvement with H100
 
 # Memory & Precision
-precision: "fp16"  # Options: fp16, bf16, fp32
-mixed_precision: "fp16"
-gradient_checkpointing: true  # Re-enable for memory
-enable_xformers: false  # Try without xformers
-use_8bit_adam: true  # Use bitsandbytes 8-bit Adam optimizer
-enable_cpu_offload: true  # Offload UNet to CPU between forward passes (slow but fits in VRAM!)
+precision: "bf16"  # Use bf16 - H100 has hardware support (faster + stable)
+mixed_precision: "bf16"
+gradient_checkpointing: false  # Disable - H100 doesn't need it (80GB is plenty)
+enable_xformers: true  # Enable for faster attention - H100 loves this
+use_8bit_adam: false  # Disable - use regular AdamW (faster on H100, memory is not constrained)
+enable_cpu_offload: false  # Disable - keep everything on GPU (H100 has 80GB!)
 
 # Regularization
 noise_offset: 0.1  # Improves dark/light image generation
@@ -53,7 +55,7 @@ prior_preservation_weight: 1.0
 # Checkpointing & Logging
 output_dir: "./outputs/aldar_kose_lora"
 checkpoint_dir: "./outputs/checkpoints"
-save_every: 50  # Save checkpoint every N steps
+save_every: 100  # Save checkpoint every 100 steps (faster training, less I/O)
 save_total_limit: 5  # Keep only last N checkpoints
 resume_from_checkpoint: null  # Path to checkpoint or "latest"
 
