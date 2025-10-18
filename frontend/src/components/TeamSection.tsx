@@ -21,7 +21,7 @@ export function TeamSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
           {/* Team Members */}
-          <div className="text-center p-8 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer group animate-in slide-in-from-bottom duration-800 delay-300">
+          <div className="text-center p-8 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer group">
             <div className="mb-4 flex justify-center">
               <img 
                 src="/dauren.webp" 
@@ -36,7 +36,7 @@ export function TeamSection() {
             >
               Dauren
             </div>
-            <a 
+            <a  
               href="https://www.linkedin.com/in/dauren-apas/"
               target="_blank"
               rel="noopener noreferrer"
