@@ -148,19 +148,19 @@ class SimplifiedStoryboardGenerator:
         negative_prompt: str = "blurry, low quality, distorted",
         num_inference_steps: int = 50,
         guidance_scale: float = 7.5,
-        img2img_strength: float = 0.4,
-        consistency_threshold: float = 0.70,
-        max_retries: int = 2,
+        consistency_threshold: float = 0.65,
+        max_retries: int = 3,
         output_dir: str = "./simple_storyboard",
     ) -> List[Image.Image]:
         """
-        Generate sequence of frames with basic consistency
+        Generate sequence of story frames with character consistency
         
         Strategy:
-        - Frame 1: Full txt2img generation
-        - Frame 2+: Img2img from previous frame (preserves composition)
-        - CLIP validation against frame 1
-        - Small seed variations for subtle differences
+        - ALL frames: Full txt2img generation (different scenes/compositions)
+        - Character consistency via LoRA (trained identity)
+        - CLIP validation against first frame (face similarity)
+        - Different seeds for scene variety
+        - Retry if character doesn't match
         """
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
@@ -168,55 +168,42 @@ class SimplifiedStoryboardGenerator:
         frames = []
         scores = []
         
-        # Frame 1: Base generation
-        logger.info("=" * 60)
-        logger.info("FRAME 1: Initial generation")
-        logger.info("=" * 60)
-        
-        generator = torch.Generator(device=self.device).manual_seed(base_seed)
-        first_frame = self.txt2img_pipe(
-            prompt=prompts[0],
-            negative_prompt=negative_prompt,
-            num_inference_steps=num_inference_steps,
-            guidance_scale=guidance_scale,
-            generator=generator,
-        ).images[0]
-        
-        frames.append(first_frame)
-        first_frame.save(output_path / "frame_001.png")
-        logger.info(f"✓ Frame 1 saved")
-        
-        # Subsequent frames: img2img for consistency
-        for idx in range(1, len(prompts)):
+        # Generate all frames with txt2img for proper story progression
+        for idx in range(len(prompts)):
             logger.info("=" * 60)
-            logger.info(f"FRAME {idx + 1}")
+            logger.info(f"FRAME {idx + 1}/{len(prompts)}")
             logger.info("=" * 60)
+            logger.info(f"Prompt: {prompts[idx][:80]}...")
             
-            prev_frame = frames[idx - 1]
             best_frame = None
             best_score = 0.0
             
             for attempt in range(max_retries):
                 logger.info(f"Attempt {attempt + 1}/{max_retries}...")
                 
-                # Slightly vary seed
-                seed_offset = idx * 100 + attempt * 10
-                generator = torch.Generator(device=self.device).manual_seed(base_seed + seed_offset)
+                # Unique seed per frame (for variety) + attempt offset (for retries)
+                seed = base_seed + (idx * 1000) + (attempt * 10)
+                generator = torch.Generator(device=self.device).manual_seed(seed)
                 
-                # Generate using img2img from previous frame
-                frame = self.img2img_pipe(
+                # Generate fresh frame with txt2img (NOT img2img!)
+                frame = self.txt2img_pipe(
                     prompt=prompts[idx],
                     negative_prompt=negative_prompt,
-                    image=prev_frame,
-                    strength=img2img_strength,  # 0.4 = keep 60% of previous frame structure
                     num_inference_steps=num_inference_steps,
                     guidance_scale=guidance_scale,
                     generator=generator,
                 ).images[0]
                 
-                # Validate consistency
-                score = self.compute_clip_similarity(first_frame, frame)
-                logger.info(f"  CLIP similarity: {score:.3f}")
+                # For first frame, always accept
+                if idx == 0:
+                    best_frame = frame
+                    best_score = 1.0
+                    logger.info(f"  First frame - accepting")
+                    break
+                
+                # Validate character consistency with first frame
+                score = self.compute_clip_similarity(frames[0], frame)
+                logger.info(f"  Character similarity: {score:.3f}")
                 
                 if score > best_score:
                     best_score = score
@@ -238,7 +225,7 @@ class SimplifiedStoryboardGenerator:
         report = {
             "base_seed": base_seed,
             "num_frames": len(prompts),
-            "img2img_strength": img2img_strength,
+            "generation_method": "txt2img (full scene generation)",
             "average_consistency": float(np.mean(scores)) if scores else 1.0,
             "min_consistency": float(np.min(scores)) if scores else 1.0,
             "frames": [
@@ -291,22 +278,22 @@ def main():
         help="Base random seed"
     )
     parser.add_argument(
-        "--img2img-strength",
-        type=float,
-        default=0.4,
-        help="Img2img strength (0.0-1.0, lower = more consistent)"
-    )
-    parser.add_argument(
         "--consistency-threshold",
         type=float,
-        default=0.70,
-        help="Minimum CLIP similarity"
+        default=0.65,
+        help="Minimum CLIP character similarity (0.60-0.70 recommended for variety)"
     )
     parser.add_argument(
         "--steps",
         type=int,
         default=50,
         help="Inference steps"
+    )
+    parser.add_argument(
+        "--guidance-scale",
+        type=float,
+        default=7.5,
+        help="Guidance scale (higher = follow prompt more)"
     )
     
     args = parser.parse_args()
@@ -330,7 +317,7 @@ def main():
         prompts=prompts,
         base_seed=args.base_seed,
         num_inference_steps=args.steps,
-        img2img_strength=args.img2img_strength,
+        guidance_scale=args.guidance_scale,
         consistency_threshold=args.consistency_threshold,
         output_dir=args.output_dir,
     )

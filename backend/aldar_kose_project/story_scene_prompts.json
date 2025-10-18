@@ -1,12 +1,12 @@
 {
-  "scene_name": "Aldar Kose Story Scene",
-  "description": "Story sequence showing Aldar Kose in various situations",
+  "scene_name": "Aldar Kose - The Clever Trick",
+  "description": "Animated story sequence showing Aldar Kose playing a clever trick",
   "prompts": [
-    "professional 3D render of aldar_kose_man standing in a traditional Kazakh yurt, warm interior lighting, detailed face",
-    "professional 3D render of aldar_kose_man gesturing while telling a story, traditional clothing, expressive face",
-    "professional 3D render of aldar_kose_man laughing heartily, animated expression, traditional setting",
-    "professional 3D render of aldar_kose_man holding a traditional musical instrument, focused expression",
-    "professional 3D render of aldar_kose_man sitting cross-legged, welcoming gesture, warm atmosphere",
-    "professional 3D render of aldar_kose_man with a wise smile, close-up portrait, soft lighting"
+    "cinematic 3D render of aldar_kose_man walking through a bustling medieval market, confident smile, traditional Kazakh clothing, wide shot, vibrant colors",
+    "professional 3D render of aldar_kose_man talking with a greedy merchant, animated gestures, close-up on faces, market stall background",
+    "dramatic 3D render of aldar_kose_man holding up a shiny object, excited expression, merchant looking interested, medium shot",
+    "dynamic 3D render of aldar_kose_man running away quickly, laughing, motion blur, merchant shouting in background, action shot",
+    "comedic 3D render of aldar_kose_man hiding behind a wall, hand covering mouth to suppress laughter, peeking around corner",
+    "cinematic 3D render of aldar_kose_man walking away into sunset, satisfied smile, counting coins, wide landscape shot, golden hour lighting"
   ]
 }

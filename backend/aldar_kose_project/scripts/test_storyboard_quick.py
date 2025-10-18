@@ -57,9 +57,9 @@ def test_storyboard():
         prompts=prompts,
         base_seed=BASE_SEED,
         num_inference_steps=40,  # Slightly lower for faster testing
-        img2img_strength=0.35,   # More consistency (lower = more similar)
-        consistency_threshold=0.70,  # Accept if CLIP similarity > 0.70
-        max_retries=2,
+        guidance_scale=7.5,
+        consistency_threshold=0.65,  # Accept if character similarity > 0.65
+        max_retries=3,  # Try up to 3 times per frame
         output_dir=OUTPUT_DIR,
     )
     
