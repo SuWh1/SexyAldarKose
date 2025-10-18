@@ -94,25 +94,63 @@ CRITICAL RULES:
    - Frame 1 establishes the character's identity for all subsequent frames
    - MUST show face clearly from the front (never from back, side, or obscured)
    - Character should be PROPERLY VISIBLE (not zoomed too close, not too far)
-   - Examples: "aldar_kose_man portrait, looking at camera, steppe background, front-facing"
+   - Include ALL key story elements in Frame 1 (e.g., if story has horse, show horse)
+   - Examples: "aldar_kose_man portrait with horse, looking at camera, steppe background, front-facing"
 4. FRAMES 2+: Ensure aldar_kose_man is PROPERLY VISIBLE and recognizable in each frame
-5. **BACKGROUND CONSISTENCY**: Keep the background/setting CONSISTENT across frames
+5. **STORY ELEMENT CONSISTENCY**: Maintain ALL key story elements throughout frames
+   - If story mentions a HORSE → include horse in ALL relevant frames (riding, racing, with horse, etc.)
+   - If story mentions a MERCHANT → keep merchant present in relevant frames
+   - If story has OBJECTS (bag, gold, etc.) → track them through the story
+   - Do NOT drop important story elements halfway through
+   - Key elements should appear from Frame 1 and persist throughout
+6. **BACKGROUND CONSISTENCY**: Keep the background/setting CONSISTENT across frames
    - If story starts in steppe, keep steppe background unless story explicitly changes location
    - If story is at a bazaar, keep bazaar setting throughout
    - Only change background when the story CLEARLY indicates a location change
    - Always EXPLICITLY mention the background/setting in each frame description
    - Examples: "steppe background", "yurt setting", "bazaar background", "mountain backdrop"
-6. Minimum 6 scenes, maximum 10 scenes
-7. Do NOT mention clothing, outfits, costumes, or physical appearance
-8. Make scenes visually distinct through ACTION, not background changes
-9. NEVER use back views, silhouettes, or obscured faces for Frame 1
+7. Minimum 6 scenes, maximum 10 scenes
+8. Do NOT mention clothing, outfits, costumes, or physical appearance
+9. Make scenes visually distinct through ACTION, not by dropping story elements
+10. NEVER use back views, silhouettes, or obscured faces for Frame 1
 
 The character is "aldar_kose_man" - a clever trickster from Kazakh folklore.
 
-FRAME 1 EXAMPLES (MANDATORY front-facing reference with clear background):
-- "aldar_kose_man portrait, looking at camera, steppe background, front-facing"
-- "aldar_kose_man facing camera, slight smile, bazaar background, front-facing"
+FRAME 1 EXAMPLES (MANDATORY front-facing reference with ALL key elements):
+- "aldar_kose_man portrait with horse, looking at camera, steppe background, front-facing"
+- "aldar_kose_man facing camera next to merchant, bazaar background, front-facing"
 - "aldar_kose_man looking forward, yurt setting, portrait, front-facing"
+
+GOOD STORY ELEMENT CONSISTENCY EXAMPLES:
+
+Story with HORSE (race):
+  Frame 1: "aldar_kose_man portrait with horse, steppe background, front-facing"
+  Frame 2: "aldar_kose_man mounting horse, steppe background"
+  Frame 3: "aldar_kose_man riding horse in race, steppe background"
+  Frame 4: "aldar_kose_man racing on horse, steppe background"
+  Frame 5: "aldar_kose_man on horse crossing finish, steppe background"
+  Frame 6: "aldar_kose_man celebrating on horse, steppe background"
+  ✅ Horse present in ALL frames
+
+Story with MERCHANT (trick):
+  Frame 1: "aldar_kose_man portrait with merchant, bazaar background, front-facing"
+  Frame 2: "aldar_kose_man talking to merchant, bazaar background"
+  Frame 3: "aldar_kose_man showing goods to merchant, bazaar background"
+  Frame 4: "aldar_kose_man receiving gold from merchant, bazaar background"
+  ✅ Merchant present in ALL frames
+
+BAD EXAMPLES (dropping story elements - NEVER DO THIS):
+❌ Story: "Aldar winning race with horse"
+  Frame 1: aldar_kose_man with horse
+  Frame 2: aldar_kose_man riding horse
+  Frame 3: aldar_kose_man racing (NO HORSE - WRONG!)
+  Frame 4: aldar_kose_man running (NO HORSE - WRONG!)
+  Frame 5: aldar_kose_man celebrating (NO HORSE - WRONG!)
+
+❌ Story: "Aldar tricks merchant"
+  Frame 1: aldar_kose_man with merchant
+  Frame 2: aldar_kose_man talking (NO MERCHANT - WRONG!)
+  Frame 3: aldar_kose_man alone (NO MERCHANT - WRONG!)
 
 GOOD BACKGROUND CONSISTENCY EXAMPLES:
 Story in steppe:
@@ -138,19 +176,40 @@ BAD EXAMPLES for Frame 1 (NEVER do this):
 - "back view of aldar_kose_man"
 
 Return a JSON object EXACTLY in this format (no extra text):
-{
-    "num_scenes": <number>,
-    "reasoning": "<one short sentence explaining why this number>",
+
+EXAMPLE for race story with horse:
+{{
+    "num_scenes": 6,
+    "reasoning": "Six scenes to show the complete race sequence with horse",
     "scenes": [
-        {"frame": 1, "description": "aldar_kose_man portrait, looking at camera, steppe background, front-facing"},
-        {"frame": 2, "description": "aldar_kose_man riding horse, steppe, front-facing"},
-        {"frame": 3, "description": "aldar_kose_man dismounting horse, yurt nearby"}
+        {{"frame": 1, "description": "aldar_kose_man portrait with horse, steppe background, front-facing"}},
+        {{"frame": 2, "description": "aldar_kose_man mounting horse, steppe background"}},
+        {{"frame": 3, "description": "aldar_kose_man riding horse in race, steppe background"}},
+        {{"frame": 4, "description": "aldar_kose_man racing on horse, steppe background"}},
+        {{"frame": 5, "description": "aldar_kose_man on horse crossing finish, steppe background"}},
+        {{"frame": 6, "description": "aldar_kose_man celebrating on horse, steppe background"}}
     ]
-}
+}}
+
+EXAMPLE for merchant trick story:
+{{
+    "num_scenes": 6,
+    "reasoning": "Six scenes to show complete trick interaction with merchant",
+    "scenes": [
+        {{"frame": 1, "description": "aldar_kose_man portrait with merchant, bazaar background, front-facing"}},
+        {{"frame": 2, "description": "aldar_kose_man talking to merchant, bazaar background"}},
+        {{"frame": 3, "description": "aldar_kose_man showing goods to merchant, bazaar background"}},
+        {{"frame": 4, "description": "aldar_kose_man receiving payment from merchant, bazaar background"}},
+        {{"frame": 5, "description": "aldar_kose_man leaving with merchant watching, bazaar background"}},
+        {{"frame": 6, "description": "aldar_kose_man celebrating, merchant disappointed, bazaar background"}}
+    ]
+}}
 
 Remember: 
-- Frame 1 MUST show the face clearly from the front (this is the reference for all other frames)
+- Frame 1 MUST show the face clearly from the front AND include key story elements
+- ALL key elements (horse, merchant, objects) must persist throughout relevant frames
 - Character should be PROPERLY VISIBLE in all frames (not too zoomed, not too far)
+- Keep same background/setting unless story explicitly changes location
 - DO NOT include separate "camera" or "mood" fields
 - Put framing instructions (front-facing/portrait) inside the `description` string
 """
@@ -203,15 +262,30 @@ class PromptStoryboardGenerator:
 Story: "{story}"
 
 CRITICAL INSTRUCTIONS:
-1. **FRAME 1 MUST BE A REFERENCE SHOT**: 
-   - Frame 1 establishes character identity for ALL subsequent frames
+1. **IDENTIFY KEY STORY ELEMENTS FIRST**:
+   - List ALL important elements: characters (horse, merchant, etc.), objects (gold, bag, etc.), setting
+   - These elements MUST appear consistently throughout ALL relevant frames
+   - Example: If story has "horse" → horse must appear in ALL frames (riding, racing, celebrating on horse)
+   - Example: If story has "merchant" → merchant must be present in ALL frames of the interaction
+
+2. **FRAME 1 MUST BE A REFERENCE SHOT**: 
+   - Frame 1 establishes character identity AND key story elements
    - MUST be a clear FRONT-FACING portrait showing aldar_kose_man's FACE
+   - MUST include ALL key story elements visible in Frame 1
    - NEVER from back, side, silhouette, or distance
    - Character should be PROPERLY VISIBLE (not too zoomed in)
-   - MUST include clear background/setting (e.g., "steppe background", "bazaar background")
-   - Example: "aldar_kose_man portrait, looking forward, steppe background, front-facing"
+   - MUST include clear background/setting
+   - Example for race story: "aldar_kose_man portrait with horse, steppe background, front-facing"
+   - Example for merchant story: "aldar_kose_man portrait with merchant, bazaar background, front-facing"
 
-2. **BACKGROUND CONSISTENCY**:
+3. **STORY ELEMENT PERSISTENCE**:
+   - Once you introduce an element (horse, merchant, object), keep it in ALL subsequent relevant frames
+   - DO NOT drop elements halfway through the story
+   - Track each element through the entire narrative
+   - Example: Race story → horse in frames 1, 2, 3, 4, 5, 6 (NOT just 1, 2, 3 then disappearing)
+   - Example: Trick story → merchant in all frames where interaction happens
+
+4. **BACKGROUND CONSISTENCY**:
    - Identify the PRIMARY SETTING from the story (steppe, bazaar, yurt, mountain, village, etc.)
    - Keep this SAME background/setting in ALL frames unless story explicitly changes location
    - ALWAYS mention the background in EVERY frame description
@@ -219,30 +293,54 @@ CRITICAL INSTRUCTIONS:
    - Example: If story is about a bazaar trick → all frames should have "bazaar background"
    - Only change background if story clearly indicates character moves to a different place
 
-3. FRAMES 2-{max_frames}:
-   - Show the story progression through CHARACTER ACTIONS, not background changes
+5. FRAMES 2-{max_frames}:
+   - Show the story progression through CHARACTER ACTIONS with consistent elements
    - Ensure aldar_kose_man is PROPERLY VISIBLE in each frame
-   - Keep descriptions SHORT and SIMPLE (action + consistent background, ~10 words)
-   - Always include the background/setting explicitly
+   - Keep descriptions SHORT and SIMPLE (action + key elements + background, ~10-12 words)
+   - Always include the background/setting AND key story elements explicitly
+   - Example: "aldar_kose_man racing on horse, steppe background" (NOT "aldar_kose_man racing")
 
-4. General Rules:
+6. General Rules:
    - Decide how many scenes needed (minimum 6, maximum {max_frames})
    - Use "aldar_kose_man" as the character identifier
    - DO NOT include separate camera or mood fields in the JSON output
    - DO NOT mention clothing or appearance
 
-Return JSON object exactly:
+Return JSON object following these EXACT examples:
+
+FOR RACE STORY (with horse):
 {{
-    "num_scenes": <number>,
-    "reasoning": "<one short sentence>",
+    "num_scenes": 6,
+    "reasoning": "Six scenes to show complete race with horse",
     "scenes": [
-        {{"frame": 1, "description": "aldar_kose_man portrait, looking at camera, steppe background, front-facing"}},
-        {{"frame": 2, "description": "aldar_kose_man riding horse, steppe, front-facing"}},
-        {{"frame": 3, "description": "aldar_kose_man dismounting horse, yurt nearby"}}
+        {{"frame": 1, "description": "aldar_kose_man portrait with horse, steppe background, front-facing"}},
+        {{"frame": 2, "description": "aldar_kose_man mounting horse, steppe background"}},
+        {{"frame": 3, "description": "aldar_kose_man riding horse in race, steppe background"}},
+        {{"frame": 4, "description": "aldar_kose_man racing on horse, steppe background"}},
+        {{"frame": 5, "description": "aldar_kose_man on horse crossing finish, steppe background"}},
+        {{"frame": 6, "description": "aldar_kose_man celebrating on horse, steppe background"}}
     ]
 }}
 
-REMEMBER: Frame 1 is the REFERENCE - it MUST clearly show the face from the front with character properly visible!"""
+FOR MERCHANT TRICK STORY:
+{{
+    "num_scenes": 6,
+    "reasoning": "Six scenes to show trick interaction with merchant",
+    "scenes": [
+        {{"frame": 1, "description": "aldar_kose_man portrait with merchant, bazaar background, front-facing"}},
+        {{"frame": 2, "description": "aldar_kose_man talking to merchant, bazaar background"}},
+        {{"frame": 3, "description": "aldar_kose_man showing goods to merchant, bazaar background"}},
+        {{"frame": 4, "description": "aldar_kose_man receiving gold from merchant, bazaar background"}},
+        {{"frame": 5, "description": "aldar_kose_man leaving with gold, merchant watching, bazaar background"}},
+        {{"frame": 6, "description": "aldar_kose_man celebrating, merchant disappointed, bazaar background"}}
+    ]
+}}
+
+CRITICAL: 
+- Frame 1 MUST include ALL key story elements (horse, merchant, etc.)
+- ALL elements must persist through ALL relevant frames
+- Keep same background unless story explicitly changes location
+- DO NOT drop horse/merchant/objects halfway through!"""
 
         try:
             response = self.client.chat.completions.create(

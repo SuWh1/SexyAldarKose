@@ -1,16 +1,29 @@
-# Background Consistency Improvements
+# Background & Story Element Consistency Improvements
 
-## Problem
-Backgrounds were changing drastically between frames (e.g., steppe → mountains → desert → village), making the storyboard feel disjointed and inconsistent.
+## Problems
+1. **Backgrounds changing drastically** between frames (e.g., steppe → mountains → desert → village)
+2. **Story elements disappearing** halfway through (e.g., horse present in frames 1-3, then missing in frames 4-6)
 
-## Solution
-Updated GPT-4 prompt engineering to enforce background consistency across all frames.
+## Solutions
+Updated GPT-4 prompt engineering to enforce:
+1. Background consistency across all frames
+2. Story element persistence throughout the narrative
 
 ---
 
 ## Changes Made
 
-### 1. **Added Background Consistency Rule**
+### 1. **Added Story Element Consistency Rule (NEW)**
+```
+**STORY ELEMENT CONSISTENCY**: Maintain ALL key story elements throughout frames
+- If story mentions a HORSE → include horse in ALL relevant frames
+- If story mentions a MERCHANT → keep merchant present in relevant frames  
+- If story has OBJECTS (bag, gold, etc.) → track them through the story
+- Do NOT drop important story elements halfway through
+- Key elements should appear from Frame 1 and persist throughout
+```
+
+### 2. **Added Background Consistency Rule**
 ```
 **BACKGROUND CONSISTENCY**: Keep the background/setting CONSISTENT across frames
 - If story starts in steppe, keep steppe background unless story explicitly changes location
@@ -19,27 +32,45 @@ Updated GPT-4 prompt engineering to enforce background consistency across all fr
 - Always EXPLICITLY mention the background/setting in each frame description
 ```
 
-### 2. **Enhanced Examples with Consistent Backgrounds**
+### 2. **Enhanced Examples with Consistent Story Elements & Backgrounds**
 
-**GOOD Examples:**
+**GOOD Examples - Story Elements Persist:**
 ```
-Story in steppe:
-  Frame 1: "aldar_kose_man portrait, steppe background, front-facing"
-  Frame 2: "aldar_kose_man riding horse, steppe background"
-  Frame 3: "aldar_kose_man dismounting horse, steppe background"
-  Frame 4: "aldar_kose_man celebrating victory, steppe background"
+Story with HORSE (race):
+  Frame 1: "aldar_kose_man portrait with horse, steppe background, front-facing"
+  Frame 2: "aldar_kose_man mounting horse, steppe background"
+  Frame 3: "aldar_kose_man riding horse in race, steppe background"
+  Frame 4: "aldar_kose_man racing on horse, steppe background"
+  Frame 5: "aldar_kose_man on horse crossing finish, steppe background"
+  Frame 6: "aldar_kose_man celebrating on horse, steppe background"
+  ✅ Horse present in ALL frames
+  ✅ Same steppe background throughout
 
-Story at bazaar:
-  Frame 1: "aldar_kose_man portrait, bazaar background, front-facing"
+Story with MERCHANT (trick):
+  Frame 1: "aldar_kose_man portrait with merchant, bazaar background, front-facing"
   Frame 2: "aldar_kose_man talking to merchant, bazaar background"
-  Frame 3: "aldar_kose_man pointing at goods, bazaar background"
+  Frame 3: "aldar_kose_man showing goods to merchant, bazaar background"
+  Frame 4: "aldar_kose_man receiving gold from merchant, bazaar background"
+  ✅ Merchant present in ALL frames
+  ✅ Same bazaar background throughout
 ```
 
-**BAD Examples (now explicitly shown to avoid):**
+**BAD Examples - Elements Disappear (FIXED):**
 ```
-- Frame 1: steppe, Frame 2: mountains, Frame 3: desert, Frame 4: village
-- Changing location every frame when story doesn't indicate movement
-- Omitting background/setting from frame descriptions
+❌ BEFORE FIX - Story: "Aldar winning race with horse"
+  Frame 1: aldar_kose_man with horse, steppe
+  Frame 2: aldar_kose_man riding horse, steppe
+  Frame 3: aldar_kose_man racing (NO HORSE!)
+  Frame 4: aldar_kose_man running (NO HORSE!)
+  Frame 5: aldar_kose_man celebrating (NO HORSE!)
+  
+✅ AFTER FIX - Same story:
+  Frame 1: aldar_kose_man portrait with horse, steppe background
+  Frame 2: aldar_kose_man mounting horse, steppe background
+  Frame 3: aldar_kose_man riding horse in race, steppe background
+  Frame 4: aldar_kose_man racing on horse, steppe background
+  Frame 5: aldar_kose_man on horse crossing finish, steppe background
+  Frame 6: aldar_kose_man celebrating on horse, steppe background
 ```
 
 ### 3. **Updated User Prompt Template**
