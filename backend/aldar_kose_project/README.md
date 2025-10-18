@@ -162,9 +162,68 @@ Monitor training progress:
 - Validation images generated every N steps
 - Checkpoints saved to `outputs/checkpoints/`
 
-## 🎨 Generate Images
+## � Generate Stories (NEW!)
 
-After training, generate images with your LoRA:
+### Quick Terminal Generation
+
+Generate complete story sequences with a single command:
+
+```bash
+# Simplest - just provide a prompt (uses defaults)
+python scripts/generate_story.py "Aldar Kose tricks a wealthy merchant and steals his horse"
+
+# Fully deterministic output (same result every time)
+python scripts/generate_story.py "Aldar riding across the steppe" --seed 42 --temp 0.0
+
+# Reference-guided mode (better face consistency)
+python scripts/generate_story.py "Aldar at the bazaar" --ref-guided --seed 42 --temp 0.0
+```
+
+**See [TERMINAL_QUICK_START.md](TERMINAL_QUICK_START.md) for the complete quick reference guide.**
+
+**Default settings:**
+- Seed: 42
+- Temperature: 0.7 (balanced creativity)
+- Frames: Auto (GPT decides)
+- Mode: Simple (faster)
+
+**For deterministic output:**
+- Use `--seed 42 --temp 0.0` to get **identical output** every time
+- Same prompt + same seed + temp 0.0 = pixel-perfect reproducibility
+
+**All options:**
+```bash
+python scripts/generate_story.py "Your prompt" \
+  --seed 42 \                # Random seed (default: 42)
+  --temp 0.0 \              # GPT temperature 0.0-1.0 (default: 0.7)
+  --frames 8 \              # Number of frames 6-10 (default: auto)
+  --ref-guided \            # Use reference-guided mode (optional)
+  --output my_story \       # Custom output name (optional)
+  --lora-path path/to/lora  # Custom LoRA path (optional)
+```
+
+**Guides:**
+- **[TERMINAL_QUICK_START.md](TERMINAL_QUICK_START.md)** - One-page cheat sheet
+- **[TERMINAL_GENERATION_GUIDE.md](TERMINAL_GENERATION_GUIDE.md)** - Complete guide with examples
+- **[API_QUICKSTART.md](API_QUICKSTART.md)** - REST API server usage
+
+### API Server
+
+Start the FastAPI server for web-based generation:
+
+```bash
+python api/server.py
+```
+
+Then access:
+- **Swagger UI:** http://localhost:8000/docs
+- **Health check:** http://localhost:8000/health
+
+See **[API_QUICKSTART.md](API_QUICKSTART.md)** for complete API documentation.
+
+## �🎨 Generate Single Images
+
+After training, generate single images with your LoRA:
 
 ```bash
 # Generate a single image

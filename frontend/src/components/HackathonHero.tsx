@@ -32,11 +32,8 @@ export function HackathonHero() {
     if (!isLoading) {
       setIsLoading(true);
       
-      // Simulate API call with 3 second delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Navigate to the comics page
-      navigate('/aldarkose');
+      // Navigate to the generate page with the prompt
+      navigate('/generate', { state: { prompt: prompt.trim() } });
       setIsLoading(false);
     }
   };
