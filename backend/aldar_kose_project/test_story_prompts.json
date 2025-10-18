@@ -1,0 +1,12 @@
+{
+  "scene_name": "Aldar Kose Greeting Test",
+  "description": "Test sequence showing Aldar Kose character consistency across different expressions",
+  "prompts": [
+    "professional 3D render of aldar_kose_man with neutral expression, centered composition, studio lighting, high quality",
+    "professional 3D render of aldar_kose_man smiling warmly, centered composition, studio lighting, high quality",
+    "professional 3D render of aldar_kose_man laughing happily, centered composition, studio lighting, high quality",
+    "professional 3D render of aldar_kose_man with surprised expression, centered composition, studio lighting, high quality",
+    "professional 3D render of aldar_kose_man winking playfully, centered composition, studio lighting, high quality",
+    "professional 3D render of aldar_kose_man with thoughtful expression, centered composition, studio lighting, high quality"
+  ]
+}
