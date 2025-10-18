@@ -31,6 +31,17 @@ from diffusers.models.attention_processor import LoRAAttnProcessor2_0
 from transformers import CLIPProcessor, CLIPModel, CLIPTextModel, CLIPTextModelWithProjection
 from peft import PeftModel
 
+# Import anomaly detector
+try:
+    from scripts.anomaly_detector import AnomalyDetector
+    HAS_ANOMALY_DETECTOR = True
+except ImportError:
+    try:
+        from anomaly_detector import AnomalyDetector
+        HAS_ANOMALY_DETECTOR = True
+    except ImportError:
+        HAS_ANOMALY_DETECTOR = False
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -46,12 +57,25 @@ class SimplifiedStoryboardGenerator:
         lora_path: Optional[str] = None,
         device: str = "cuda",
         dtype: torch.dtype = torch.float16,
+        enable_anomaly_detection: bool = True,
     ):
         """Initialize simplified pipeline"""
         self.device = device
         self.dtype = dtype
+        self.enable_anomaly_detection = enable_anomaly_detection
         
         logger.info("Initializing Simplified Storyboard Generator...")
+        
+        # Initialize anomaly detector
+        if self.enable_anomaly_detection and HAS_ANOMALY_DETECTOR:
+            logger.info("Initializing Anomaly Detector...")
+            self.anomaly_detector = AnomalyDetector(device=device, strict_mode=False)
+            logger.info("✓ Anomaly detection enabled")
+        else:
+            self.anomaly_detector = None
+            if self.enable_anomaly_detection:
+                logger.warning("⚠️  Anomaly detection requested but not available")
+                logger.warning("    Install: pip install opencv-python mediapipe")
         
         # Use cache directory from training
         cache_dir = "/root/.cache/huggingface/hub"
@@ -185,17 +209,69 @@ class SimplifiedStoryboardGenerator:
                 seed = base_seed + (idx * 1000) + (attempt * 10)
                 generator = torch.Generator(device=self.device).manual_seed(seed)
                 
+                # Determine CFG based on previous failures
+                current_cfg = guidance_scale
+                if attempt > 0 and hasattr(self, '_last_anomaly_suggestions'):
+                    current_cfg = self._last_anomaly_suggestions.get('guidance_scale', guidance_scale)
+                    logger.info(f"  Adjusted CFG: {current_cfg:.1f} (based on anomaly suggestions)")
+                
                 # Generate fresh frame with txt2img (NOT img2img!)
                 frame = self.txt2img_pipe(
                     prompt=prompts[idx],
                     negative_prompt=negative_prompt,
                     num_inference_steps=num_inference_steps,
-                    guidance_scale=guidance_scale,
+                    guidance_scale=current_cfg,
                     generator=generator,
                 ).images[0]
                 
-                # For first frame, always accept
-                if idx == 0:
+                # Anomaly detection check (CRITICAL for quality)
+                has_anomaly = False
+                anomaly_details = None
+                
+                if self.anomaly_detector and attempt < max_retries - 1:  # Skip check on last attempt
+                    logger.info("  Running anomaly detection...")
+                    anomaly_result = self.anomaly_detector.detect_anomalies(
+                        frame,
+                        expected_prompt=prompts[idx]
+                    )
+                    anomaly_details = anomaly_result
+                    
+                    if not anomaly_result['is_valid']:
+                        has_anomaly = True
+                        logger.warning(f"  ⚠️  Anomalies detected: {', '.join(anomaly_result['anomalies'])}")
+                        logger.warning(f"  Confidence: {anomaly_result['confidence']:.3f}")
+                        
+                        # Log detailed anomaly information
+                        if anomaly_result['details'].get('faces'):
+                            face_count = anomaly_result['details']['faces']['count']
+                            logger.warning(f"     Faces detected: {face_count} (expected: 1)")
+                        
+                        if anomaly_result['details'].get('pose', {}).get('anomalies'):
+                            pose_issues = anomaly_result['details']['pose']['anomalies']
+                            logger.warning(f"     Pose issues: {', '.join(pose_issues)}")
+                        
+                        # Get regeneration suggestions with improved parameters
+                        self._last_anomaly_suggestions = self.anomaly_detector.suggest_regeneration_params(
+                            anomaly_result['anomalies'],
+                            seed,
+                            current_cfg
+                        )
+                        logger.info(f"  💡 Suggestions: {', '.join(self._last_anomaly_suggestions['reason'])}")
+                        logger.info(f"     New seed: {self._last_anomaly_suggestions['seed']}")
+                        logger.info(f"     New CFG: {self._last_anomaly_suggestions['guidance_scale']:.1f}")
+                        
+                        # Continue to next attempt with adjusted params
+                        continue
+                    else:
+                        logger.info(f"  ✓ No anomalies detected (confidence: {anomaly_result['confidence']:.3f})")
+                        # Log validation details
+                        if anomaly_result['details'].get('faces'):
+                            logger.info(f"     Faces: {anomaly_result['details']['faces']['count']} ✓")
+                        if anomaly_result['details'].get('pose', {}).get('detected'):
+                            logger.info(f"     Pose: Valid ✓")
+                
+                # For first frame, always accept if no anomalies
+                if idx == 0 and not has_anomaly:
                     best_frame = frame
                     best_score = 1.0
                     logger.info(f"  First frame - accepting")
@@ -217,17 +293,55 @@ class SimplifiedStoryboardGenerator:
             
             frames.append(best_frame)
             scores.append(best_score)
-            best_frame.save(output_path / f"frame_{idx + 1:03d}.png")
+            
+            # Save frame with metadata
+            frame_path = output_path / f"frame_{idx + 1:03d}.png"
+            best_frame.save(frame_path)
+            
+            # Save frame metadata (including anomaly detection results if available)
+            metadata = {
+                "frame_id": idx + 1,
+                "prompt": prompts[idx],
+                "consistency_score": best_score,
+                "seed": base_seed + (idx * 1000),
+                "attempts": attempt + 1,
+            }
+            
+            # Add anomaly detection results if available
+            if anomaly_details:
+                metadata["anomaly_check"] = {
+                    "is_valid": anomaly_details['is_valid'],
+                    "confidence": anomaly_details['confidence'],
+                    "anomalies": anomaly_details['anomalies'],
+                    "face_count": anomaly_details['details'].get('faces', {}).get('count', 0),
+                    "pose_detected": anomaly_details['details'].get('pose', {}).get('detected', False),
+                }
+            
+            metadata_path = output_path / f"frame_{idx + 1:03d}_metadata.json"
+            with open(metadata_path, 'w') as f:
+                json.dump(metadata, f, indent=2)
+            
             logger.info(f"✓ Frame {idx + 1} saved (score: {best_score:.3f})")
+            if anomaly_details:
+                logger.info(f"   Anomaly confidence: {anomaly_details['confidence']:.3f}")
         
-        # Save report
+        # Save report with enhanced anomaly statistics
         import numpy as np
+        
+        # Calculate anomaly statistics
+        total_attempts = sum(frame.get('attempts', 1) for frame in [
+            {"attempts": len(prompts)} for _ in range(len(prompts))
+        ])
+        
         report = {
             "base_seed": base_seed,
             "num_frames": len(prompts),
             "generation_method": "txt2img (full scene generation)",
+            "anomaly_detection_enabled": self.anomaly_detector is not None,
             "average_consistency": float(np.mean(scores)) if scores else 1.0,
             "min_consistency": float(np.min(scores)) if scores else 1.0,
+            "max_consistency": float(np.max(scores)) if scores else 1.0,
+            "consistency_threshold": consistency_threshold,
             "frames": [
                 {
                     "frame_id": i + 1,
@@ -237,6 +351,18 @@ class SimplifiedStoryboardGenerator:
                 for i, p in enumerate(prompts)
             ]
         }
+        
+        # Add anomaly detection summary if enabled
+        if self.anomaly_detector:
+            report["anomaly_detection"] = {
+                "detector_config": {
+                    "strict_mode": self.anomaly_detector.strict_mode,
+                    "expected_faces": self.anomaly_detector.expected_faces,
+                    "min_face_size": self.anomaly_detector.min_face_size,
+                    "max_face_size": self.anomaly_detector.max_face_size,
+                },
+                "note": "See individual frame metadata files for detailed anomaly results"
+            }
         
         with open(output_path / "report.json", 'w') as f:
             json.dump(report, f, indent=2)

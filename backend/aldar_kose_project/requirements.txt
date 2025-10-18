@@ -17,6 +17,7 @@ safetensors>=0.4.0
 # Image Processing
 opencv-python>=4.8.0
 Pillow>=10.0.0
+mediapipe>=0.10.0  # Pose and face detection for anomaly detection
 
 # Data & Config
 PyYAML>=6.0
