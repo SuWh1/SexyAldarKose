@@ -568,13 +568,12 @@ CRITICAL:
             logger.info("=" * 60)
             
             if self.use_ref_guided:
-                logger.info("Loading Reference-Guided Generator (IP-Adapter + ControlNet)...")
+                logger.info("Loading Reference-Guided Generator (ControlNet + LoRA)...")
                 self.generator = ReferenceGuidedStoryboardGenerator(
                     lora_path=self.lora_path,
                     device=self.device,
                     use_controlnet=True,
-                    use_ip_adapter=True,
-                    ip_adapter_model="h94/IP-Adapter",  # Enable IP-Adapter for better face consistency
+                    use_ip_adapter=False,  # Disabled - LoRA provides great consistency
                 )
             else:
                 logger.info("Loading Simple Generator (LoRA + CLIP)...")

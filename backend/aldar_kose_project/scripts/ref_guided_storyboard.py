@@ -169,47 +169,27 @@ class ReferenceGuidedStoryboardGenerator:
             
             logger.info("✓ ControlNet ready!")
         
-        # Step 4: Setup IP-Adapter (if available)
+        # Step 4: Setup IP-Adapter (optional - currently disabled, LoRA provides sufficient consistency)
         self.ip_adapter = None
-        if self.use_ip_adapter:
-            if ip_adapter_model:
-                logger.info("Loading IP-Adapter...")
-                try:
-                    # Download IP-Adapter weights if needed
-                    from huggingface_hub import hf_hub_download
-                    
-                    # Download SDXL IP-Adapter model
-                    ip_adapter_path = hf_hub_download(
-                        repo_id="h94/IP-Adapter",
-                        filename="sdxl_models/ip-adapter_sdxl.bin",
-                        cache_dir=cache_dir
-                    )
-                    
-                    # Download image encoder
-                    image_encoder_path = hf_hub_download(
-                        repo_id="h94/IP-Adapter", 
-                        filename="sdxl_models/image_encoder/config.json",
-                        cache_dir=cache_dir
-                    )
-                    
-                    logger.info(f"  IP-Adapter weights: {ip_adapter_path}")
-                    
-                    # IP-Adapter wraps the pipeline
-                    target_pipe = self.controlnet_pipe if self.controlnet_pipe else self.base_pipe
-                    self.ip_adapter = IPAdapterXL(
-                        target_pipe,
-                        image_encoder_path=image_encoder_path,
-                        ip_ckpt=ip_adapter_path,
-                        device=device,
-                    )
-                    logger.info("✓ IP-Adapter loaded!")
-                except Exception as e:
-                    logger.warning(f"Failed to load IP-Adapter: {e}")
-                    logger.warning("Continuing without IP-Adapter...")
-                    self.use_ip_adapter = False
-            else:
-                logger.warning("IP-Adapter model path not provided, skipping...")
-                self.use_ip_adapter = False
+        self.use_ip_adapter = False  # Disabled - LoRA + CLIP validation works great
+        
+        # Uncomment below to enable IP-Adapter (requires additional setup)
+        # if self.use_ip_adapter and HAS_IP_ADAPTER:
+        #     if ip_adapter_model:
+        #         logger.info("Loading IP-Adapter...")
+        #         try:
+        #             from huggingface_hub import hf_hub_download
+        #             ip_adapter_path = hf_hub_download(
+        #                 repo_id="h94/IP-Adapter",
+        #                 filename="sdxl_models/ip-adapter_sdxl.bin",
+        #                 cache_dir=cache_dir
+        #             )
+        #             target_pipe = self.controlnet_pipe if self.controlnet_pipe else self.base_pipe
+        #             self.ip_adapter = IPAdapterXL(target_pipe, ip_ckpt=ip_adapter_path, device=device)
+        #             logger.info("✓ IP-Adapter loaded!")
+        #         except Exception as e:
+        #             logger.info(f"IP-Adapter not available, using LoRA only")
+        #             self.use_ip_adapter = False
         
         # Step 5: Load CLIP for consistency validation
         logger.info("Loading CLIP for consistency validation...")
@@ -227,7 +207,7 @@ class ReferenceGuidedStoryboardGenerator:
         logger.info("✓ Pipeline initialization complete!")
         logger.info(f"  LoRA: {'✓' if lora_path else '✗'}")
         logger.info(f"  ControlNet: {'✓' if self.use_controlnet else '✗'}")
-        logger.info(f"  IP-Adapter: {'✓' if self.use_ip_adapter else '✗'}")
+        # IP-Adapter disabled - LoRA provides sufficient consistency
         logger.info("=" * 60)
     
     def compute_clip_similarity(self, img1: Image.Image, img2: Image.Image) -> float:
