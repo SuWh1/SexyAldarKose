@@ -156,7 +156,14 @@ Remember:
 - Focus on ACTION and SETTING, NOT clothing or appearance
 - Use "aldar_kose_man" as the character identifier
 
-Return ONLY a JSON array, no other text."""
+Return your response as a JSON object with this EXACT structure:
+{{
+  "scenes": [
+    {{"frame": 1, "description": "...", "camera": "...", "mood": "..."}},
+    {{"frame": 2, "description": "...", "camera": "...", "mood": "..."}},
+    ...{num_frames} total scenes...
+  ]
+}}"""
 
         try:
             response = self.client.chat.completions.create(
@@ -166,6 +173,7 @@ Return ONLY a JSON array, no other text."""
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.7,
+                max_tokens=2000,
                 response_format={"type": "json_object"}
             )
             
@@ -182,8 +190,24 @@ Return ONLY a JSON array, no other text."""
                 elif isinstance(result, list):
                     scenes = result
                 else:
-                    # If it's a dict with numbered keys
+                    # If it's a dict with numbered keys, try to extract
                     scenes = list(result.values())
+                
+                # Validate we got the right number of scenes
+                if len(scenes) != num_frames:
+                    logger.warning(f"Expected {num_frames} scenes, got {len(scenes)}")
+                    logger.warning(f"Response: {content[:500]}")
+                    
+                    # If we got fewer, pad with a generic scene
+                    if len(scenes) < num_frames:
+                        logger.warning(f"Padding with generic scenes to reach {num_frames}")
+                        for i in range(len(scenes), num_frames):
+                            scenes.append({
+                                "frame": i + 1,
+                                "description": f"aldar_kose_man character continuation of story, scene {i+1}",
+                                "camera": "medium shot",
+                                "mood": "narrative"
+                            })
                 
                 logger.info(f"✓ Successfully generated {len(scenes)} scenes")
                 return scenes
@@ -325,7 +349,7 @@ Return ONLY a JSON array, no other text."""
             num_inference_steps=num_inference_steps,
             guidance_scale=guidance_scale,
             consistency_threshold=0.70,  # CLIP similarity threshold
-            max_attempts=max_attempts,
+            max_retries=max_attempts,  # Correct parameter name
         )
         
         logger.info("=" * 60)

@@ -1,7 +1,28 @@
-You are an ML engineer setting up the initial project structure for a custom SDXL fine-tuning pipeline to reproduce the 3D animated Kazakh character Aldar Kose with high identity consistency.
+# Aldar Kose SDXL LoRA Training & Storyboard Generation
 
-OBJECTIVE
-Generate a complete initial setup (no training yet) for a diffusion-based project that will later be used for LoRA fine-tuning, ControlNet conditioning, and evaluation.
+✅ **COMPLETED**: Full training pipeline, caption cleaning, and prompt-based storyboard generation system!
+
+## 🎯 Current Status
+
+**Training**: ✅ Complete - checkpoint-400 identified as good model
+**Captions**: ✅ Cleaned - 45 files, removed clothing descriptions
+**Storyboard**: ✅ Prompt-based system implemented with OpenAI GPT-4
+
+## 🚀 Quick Start
+
+### Generate Storyboard from Text Prompt
+```bash
+cd backend/aldar_kose_project
+python scripts/prompt_storyboard.py \
+    --lora-path outputs/checkpoints/checkpoint-400 \
+    --story "Aldar Kose riding his horse to his yurt at sunset"
+```
+
+See: `PROMPT_STORYBOARD_GUIDE.md` for full documentation
+
+---
+
+## 📋 Original Objective (COMPLETED)
 
 ENVIRONMENT
 - Local machine: RTX 4060 (8 GB VRAM), 16 GB RAM
