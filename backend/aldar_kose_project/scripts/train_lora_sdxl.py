@@ -143,24 +143,17 @@ class AldarKoseDataset(Dataset):
     def __getitem__(self, idx):
         sample = self.samples[idx]
         
-        # Check if we have pre-encoded latents
-        if 'latent_path' in sample:
-            # Load pre-encoded latent
-            latent = torch.load(sample['latent_path'])
-        else:
-            # Fallback: load image and encode on-the-fly (slow, high VRAM)
-            image_path = sample.get('processed_path') if self.use_processed else sample['image_path']
-            image = Image.open(image_path).convert('RGB')
-            image = self.transforms(image)
-            latent = image  # Return as latent (will be encoded during training)
+        # Always load image (encode on-the-fly in training loop for better stability)
+        image_path = sample.get('processed_path') if self.use_processed else sample['image_path']
+        image = Image.open(image_path).convert('RGB')
+        pixel_values = self.transforms(image)
         
         # Tokenize caption
         caption = sample['caption']
         input_ids_one, input_ids_two = self.tokenize_captions(caption)
         
         return {
-            'latent': latent if 'latent_path' in sample else None,
-            'pixel_values': latent if 'latent_path' not in sample else None,
+            'pixel_values': pixel_values,
             'input_ids_one': input_ids_one,
             'input_ids_two': input_ids_two,
             'caption': caption,
@@ -169,26 +162,15 @@ class AldarKoseDataset(Dataset):
 
 def collate_fn(examples):
     """Collate function for DataLoader"""
-    # Check if using pre-encoded latents or raw images
-    if examples[0].get('latent') is not None:
-        # Pre-encoded latents - stack them into batch
-        latents = torch.stack([example['latent'].squeeze(0) if example['latent'].dim() > 3 else example['latent'] for example in examples])
-        # Keep as float32 for now, will be cast to proper dtype in training loop
-        return {
-            'latents': latents,
-            'input_ids_one': torch.stack([example['input_ids_one'] for example in examples]),
-            'input_ids_two': torch.stack([example['input_ids_two'] for example in examples]),
-        }
-    else:
-        # Raw images (fallback)
-        pixel_values = torch.stack([example['pixel_values'] for example in examples])
-        pixel_values = pixel_values.to(memory_format=torch.contiguous_format).float()
-        
-        return {
-            'pixel_values': pixel_values,
-            'input_ids_one': torch.stack([example['input_ids_one'] for example in examples]),
-            'input_ids_two': torch.stack([example['input_ids_two'] for example in examples]),
-        }
+    # Always use pixel values (images are encoded on-the-fly in training loop)
+    pixel_values = torch.stack([example['pixel_values'] for example in examples])
+    pixel_values = pixel_values.to(memory_format=torch.contiguous_format).float()
+    
+    return {
+        'pixel_values': pixel_values,
+        'input_ids_one': torch.stack([example['input_ids_one'] for example in examples]),
+        'input_ids_two': torch.stack([example['input_ids_two'] for example in examples]),
+    }
 
 
 def encode_prompt(text_encoders, tokenizers, prompt, device):
@@ -453,13 +435,8 @@ def main():
     # Auto-detect manifest if not provided
     manifest_path = args.manifest
     if manifest_path is None:
-        # Prefer manifest with pre-encoded latents
-        if Path('outputs/aldar_kose_lora/dataset_manifest_with_latents.json').exists():
-            manifest_path = 'outputs/aldar_kose_lora/dataset_manifest_with_latents.json'
-            if accelerator.is_main_process:
-                logger.info("✅ Using pre-encoded latents (40% faster!)")
-            use_processed = True
-        elif Path('data/dataset_manifest_processed.json').exists():
+        # Use processed manifest (resized to target resolution)
+        if Path('data/dataset_manifest_processed.json').exists():
             manifest_path = 'data/dataset_manifest_processed.json'
             use_processed = True
         elif Path('data/dataset_manifest.json').exists():
@@ -470,7 +447,7 @@ def main():
                 "No dataset manifest found. Please run prepare_dataset.py first."
             )
     else:
-        use_processed = 'processed' in manifest_path or 'latents' in manifest_path
+        use_processed = 'processed' in manifest_path
     
     dataset = AldarKoseDataset(
         manifest_path=manifest_path,
@@ -513,8 +490,9 @@ def main():
         unet, text_encoder_one, text_encoder_two, optimizer, dataloader, lr_scheduler
     )
     
-    # Move VAE to device
-    vae.to(accelerator.device, dtype=torch.float16 if config['precision'] == 'fp16' else torch.float32)
+    # Move VAE to device with correct dtype
+    # VAE should stay in float32 for stability (encoding happens in fp32, then converted)
+    vae.to(accelerator.device, dtype=torch.float32)
     
     # Calculate total batch size
     total_batch_size = (
@@ -563,27 +541,21 @@ def main():
         
         for step, batch in enumerate(dataloader):
             with accelerator.accumulate(unet):
-                # Use pre-encoded latents or encode images on-the-fly
-                if 'latents' in batch:
-                    # Pre-encoded latents (fast, low memory)
-                    # Latents are saved as float32 for stability, convert to training precision
-                    weight_dtype = torch.float32
-                    if accelerator.mixed_precision == "fp16":
-                        weight_dtype = torch.float16
-                    elif accelerator.mixed_precision == "bf16":
-                        weight_dtype = torch.bfloat16
+                # Always encode images on-the-fly (avoids latent corruption issues)
+                # VAE handles dtype/precision better than pre-encoded approach
+                with torch.no_grad():
+                    # Load images
+                    pixel_values = batch['pixel_values'].to(accelerator.device, dtype=torch.float32)
                     
-                    # Load latents (come as float32, convert to proper dtype)
-                    latents = batch['latents'].to(accelerator.device, dtype=weight_dtype)
-                    
-                    # Check for NaN or Inf in latents (corrupted pre-encoded data)
-                    if torch.isnan(latents).any() or torch.isinf(latents).any():
-                        logger.warning(f"Found NaN/Inf in pre-encoded latents at step {global_step}, skipping batch")
-                        continue
-                else:
-                    # Fallback: encode images on-the-fly (slow, high memory)
-                    latents = vae.encode(batch['pixel_values'].to(dtype=vae.dtype)).latent_dist.sample()
+                    # Encode images to latents using VAE (in float32 for stability)
+                    # The accelerator's mixed precision will handle the rest
+                    latents = vae.encode(pixel_values).latent_dist.sample()
                     latents = latents * vae.config.scaling_factor
+                
+                # Check for NaN/Inf
+                if torch.isnan(latents).any() or torch.isinf(latents).any():
+                    logger.warning(f"Found NaN/Inf in latents at step {global_step}, skipping batch")
+                    continue
                 
                 # Sample noise
                 noise = torch.randn_like(latents)
@@ -666,15 +638,17 @@ def main():
                 else:
                     raise ValueError(f"Unknown prediction type {noise_scheduler.config.prediction_type}")
                 
-                loss = F.mse_loss(model_pred.float(), target.float(), reduction="mean")
+                # Compute MSE loss per sample (no reduction yet)
+                loss = F.mse_loss(model_pred.float(), target.float(), reduction="none")
+                loss = loss.mean(dim=list(range(1, len(loss.shape))))  # Mean over all dims except batch
                 
                 # Apply SNR weighting if configured
                 if config.get('snr_gamma'):
                     snr = compute_snr(noise_scheduler, timesteps)
                     mse_loss_weights = torch.stack([snr, config['snr_gamma'] * torch.ones_like(timesteps)], dim=1).min(dim=1)[0] / snr
-                    loss = (loss * mse_loss_weights).mean()
+                    loss = (loss * mse_loss_weights).mean()  # Apply weights and reduce to scalar
                 else:
-                    loss = loss.mean()
+                    loss = loss.mean()  # Reduce to scalar
                 
                 # Check for NaN loss before backward
                 if torch.isnan(loss) or torch.isinf(loss):
@@ -765,13 +739,15 @@ def main():
                         logger.info("🎨 Generating validation images...")
                         
                         # Create pipeline for inference
+                        # Use float16 for inference (faster), VAE stays float32 for stability
+                        inference_dtype = torch.float16 if accelerator.mixed_precision != "no" else torch.float32
                         pipeline = StableDiffusionXLPipeline.from_pretrained(
                             config['base_model'],
                             vae=vae,
                             text_encoder=accelerator.unwrap_model(text_encoder_one),
                             text_encoder_2=accelerator.unwrap_model(text_encoder_two),
                             unet=accelerator.unwrap_model(unet),
-                            torch_dtype=torch.float16 if config['precision'] == 'fp16' else torch.float32,
+                            torch_dtype=inference_dtype,
                         )
                         pipeline.to(accelerator.device)
                         
