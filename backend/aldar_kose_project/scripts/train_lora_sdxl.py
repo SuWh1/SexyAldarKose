@@ -627,7 +627,9 @@ def main():
                 if config.get('snr_gamma'):
                     snr = compute_snr(noise_scheduler, timesteps)
                     mse_loss_weights = torch.stack([snr, config['snr_gamma'] * torch.ones_like(timesteps)], dim=1).min(dim=1)[0] / snr
-                    loss = loss * mse_loss_weights
+                    loss = (loss * mse_loss_weights).mean()
+                else:
+                    loss = loss.mean()
                 
                 accelerator.backward(loss)
                 
