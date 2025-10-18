@@ -58,9 +58,17 @@ except ImportError:
     pass
 
 # Import the storyboard generators
-from simple_storyboard import SimplifiedStoryboardGenerator
+# Support both direct script execution and module import
 try:
-    from ref_guided_storyboard import ReferenceGuidedStoryboardGenerator
+    from scripts.simple_storyboard import SimplifiedStoryboardGenerator
+except ImportError:
+    from simple_storyboard import SimplifiedStoryboardGenerator
+
+try:
+    try:
+        from scripts.ref_guided_storyboard import ReferenceGuidedStoryboardGenerator
+    except ImportError:
+        from ref_guided_storyboard import ReferenceGuidedStoryboardGenerator
     HAS_REF_GUIDED = True
 except ImportError:
     HAS_REF_GUIDED = False
