@@ -1,0 +1,77 @@
+# Storyboard Generator Configuration
+# Frame-to-frame consistency pipeline for SDXL + LoRA
+
+# Model Paths
+base_model: "stabilityai/stable-diffusion-xl-base-1.0"
+lora_path: "outputs/aldar_kose_lora/final"  # Trained Aldar Köse LoRA
+refiner_model: "stabilityai/stable-diffusion-xl-refiner-1.0"
+
+# ControlNet Configuration
+controlnet:
+  type: "pose"  # "pose" or "depth"
+  pose_model: "thibaud/controlnet-openpose-sdxl-1.0"
+  depth_model: "diffusers/controlnet-depth-sdxl-1.0"
+  conditioning_scale: 0.8  # Influence strength (0.0-1.0)
+
+# IP-Adapter Configuration
+ip_adapter:
+  enabled: true
+  image_encoder: "h94/IP-Adapter"
+  checkpoint: "ip-adapter_sdxl.bin"
+  scale: 0.5  # Influence strength (0.0-1.0)
+
+# CLIP Consistency Validation
+clip:
+  model: "openai/clip-vit-large-patch14"
+  similarity_threshold: 0.75  # Minimum score for frame acceptance
+  max_retries: 3  # Regeneration attempts if below threshold
+
+# Generation Parameters
+generation:
+  num_inference_steps: 50
+  guidance_scale: 7.5
+  width: 1024
+  height: 1024
+  
+  # Seed Management
+  base_seed: 42
+  seed_interpolation: 0.1  # Variation between frames (0.0-1.0)
+  # 0.0 = identical seeds (maximum consistency)
+  # 0.5 = moderate variation
+  # 1.0 = maximum variation (different style per frame)
+
+# LoRA Configuration
+lora:
+  scale: 0.8  # LoRA influence (0.0-1.0)
+  # Higher = stronger character identity
+  # Lower = more creative freedom
+
+# Refiner Pass (Optional)
+refiner:
+  enabled: false  # Set to true for final harmonization
+  strength: 0.3  # Refinement strength (0.0-1.0)
+  num_inference_steps: 20
+
+# Negative Prompt (Applied to all frames)
+negative_prompt: >
+  blurry, low quality, distorted, deformed, ugly, bad anatomy,
+  bad proportions, duplicate, watermark, signature, text
+
+# Output Configuration
+output:
+  base_dir: "./storyboard_outputs"
+  save_control_maps: true
+  save_consistency_report: true
+  save_intermediate_frames: true
+
+# Memory Optimization
+optimization:
+  enable_attention_slicing: true
+  enable_vae_slicing: true
+  use_fp16: true
+  offload_to_cpu: false  # Enable if low VRAM (slower)
+
+# Batch Processing
+batch:
+  scenes_per_run: 1  # Process multiple scenes
+  frames_per_scene: 6  # 6-10 recommended

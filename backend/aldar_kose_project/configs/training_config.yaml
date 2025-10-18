@@ -1,0 +1,91 @@
+# SDXL LoRA Fine-tuning Configuration for Aldar Kose Character
+
+# Model Configuration
+base_model: "stabilityai/stable-diffusion-xl-base-1.0"
+vae_model: null  # null = use base model's VAE, or specify custom path
+scheduler: "ddpm"  # Options: ddpm, ddim, pndm, euler_a
+
+# Training Data
+data_dir: "./data/images"
+captions_dir: "./data/captions"
+processed_dir: "./data/processed_images"
+cache_dir: "./cache"
+
+# Image Processing
+resolution: 512  # Reduced from 1024 to fit in 8GB GPU memory
+center_crop: true
+random_flip: false  # Set to false to maintain identity consistency
+
+# Training Hyperparameters
+batch_size: 1
+gradient_accumulation_steps: 1  # Reduced to 1 to minimize memory (Effective batch size = 1)
+learning_rate: 1.0e-4
+unet_lr: 1.0e-4
+text_encoder_lr: 5.0e-5  # Lower LR for text encoder
+lr_scheduler: "constant_with_warmup"
+lr_warmup_steps: 100
+max_steps: 20  # Tiny test run - just 20 steps to verify training works
+max_train_epochs: null  # null = use max_steps instead
+
+# LoRA Configuration
+lora_rank: 16  # Reduced from 32 - less capacity but less VRAM (half the parameters)
+lora_alpha: 16  # Usually same as rank
+lora_dropout: 0.0
+lora_target_modules:
+  - "to_q"
+  - "to_v"  # Removed to_k and to_out.0 to save memory
+train_text_encoder: false  # Disable to save GPU memory on 8GB card - train only UNet
+
+# Memory & Precision
+precision: "fp16"  # Options: fp16, bf16, fp32
+mixed_precision: "fp16"
+gradient_checkpointing: true  # Re-enable for memory
+enable_xformers: false  # Try without xformers
+use_8bit_adam: true  # Use bitsandbytes 8-bit Adam optimizer
+enable_cpu_offload: true  # Offload UNet to CPU between forward passes (slow but fits in VRAM!)
+
+# Regularization
+noise_offset: 0.1  # Improves dark/light image generation
+snr_gamma: 5.0  # Min-SNR weighting strategy
+prior_preservation: false
+prior_preservation_weight: 1.0
+
+# Checkpointing & Logging
+output_dir: "./outputs/aldar_kose_lora"
+checkpoint_dir: "./outputs/checkpoints"
+save_every: 50  # Save checkpoint every N steps
+save_total_limit: 5  # Keep only last N checkpoints
+resume_from_checkpoint: null  # Path to checkpoint or "latest"
+
+# Weights & Biases
+use_wandb: false  # Disabled - using terminal logging and local files instead
+wandb_project: "aldar_kose_finetune"
+wandb_entity: null  # Your wandb username/team
+wandb_run_name: null  # Auto-generated if null
+log_every: 10  # Log metrics every N steps
+
+# Validation & Sampling
+validate_every: 50  # Generate validation samples every N steps
+num_validation_images: 1
+validation_prompts:
+  - "3D render of aldar_kose_man smiling, high quality, detailed"
+  - "aldar_kose_man in traditional Kazakh clothing, 3D animation"
+  - "portrait of aldar_kose_man, cinematic lighting"
+  - "aldar_kose_man character, full body, white background"
+validation_seeds: [42, 123, 456, 789]
+
+# Identity Consistency Evaluation
+compute_identity_similarity: true  # Compute CLIP similarity for validation
+reference_image_path: null  # Path to reference image for similarity comparison
+
+# Miscellaneous
+seed: 42
+num_workers: 0  # Set to 0 for Windows - multiprocessing issue with DataLoader
+max_grad_norm: 1.0  # Gradient clipping
+adam_beta1: 0.9
+adam_beta2: 0.999
+adam_weight_decay: 0.01
+adam_epsilon: 1.0e-8
+
+# Trigger Token (used in captions)
+trigger_token: "aldar_kose_man"

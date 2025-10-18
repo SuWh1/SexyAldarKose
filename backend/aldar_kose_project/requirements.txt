@@ -1,0 +1,56 @@
+# Core ML Libraries (compatible versions)
+# Install PyTorch first with CUDA support:
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Hugging Face Ecosystem
+transformers>=4.35.0
+diffusers>=0.25.0
+accelerate>=0.25.0
+peft>=0.7.0
+
+# Optimization & Quantization
+bitsandbytes>=0.41.0
+safetensors>=0.4.0
+
+# Image Processing
+opencv-python>=4.8.0
+Pillow>=10.0.0
+
+# Data & Config
+PyYAML>=6.0
+datasets>=2.14.0
+
+# Logging & Monitoring
+wandb>=0.16.0
+tensorboard>=2.15.0
+
+# Utilities
+tqdm>=4.66.0
+ftfy>=6.1.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# CLIP for similarity metrics
+clip-by-openai>=1.0
+
+# Automated Labeling
+openai>=1.0.0
+python-dotenv>=1.0.0
+
+# ======================================
+# Storyboard Consistency Pipeline
+# ======================================
+
+# Optional: For full consistency pipeline
+# Uncomment and install if using storyboard_generator.py (full features)
+# Requires 12GB+ VRAM
+
+# ControlNet preprocessors (pose/depth extraction)
+# controlnet-aux>=0.0.6
+
+# IP-Adapter (visual reference matching)
+# ip-adapter>=0.1.0
+
+# Note: simple_storyboard.py works with base requirements only (8GB VRAM)
