@@ -1,15 +1,37 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export function HackathonHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
 
   const handleNavigation = (section: string) => {
     setIsMobileMenuOpen(false); // Close mobile menu after navigation
-    const element = document.getElementById(section);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+    
+    // If not on home page, navigate to home first
+    if (!isHomePage) {
+      navigate('/');
+      // Wait for navigation to complete, then scroll
+      setTimeout(() => {
+        const element = document.getElementById(section);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById(section);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
     }
+  };
+
+  const handleLogoClick = () => {
+    navigate('/');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -65,7 +87,7 @@ export function HackathonHeader() {
             }`}>
           {/* Logo */}
           <div className="flex-shrink-0">
-            <a href="/" className="flex items-center gap-3 group cursor-pointer">
+            <button onClick={handleLogoClick} className="flex items-center gap-3 group cursor-pointer bg-transparent border-none p-0">
               <img 
                 src="/icon.png" 
                 alt="SexyAldarKose" 
@@ -82,7 +104,7 @@ export function HackathonHeader() {
               >
                 SexyAldarKose
               </h1>
-            </a>
+            </button>
           </div>
 
           {/* Desktop Navigation */}
