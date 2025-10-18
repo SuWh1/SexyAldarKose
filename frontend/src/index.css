@@ -1,1 +1,19 @@
 @import 'tailwindcss';
+
+/* Apply fonts globally */
+* {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+
+/* Apply Space Grotesk to all headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+}
+
+/* Apply Inter to buttons and input elements */
+button, input, textarea, select {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}

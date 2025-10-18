@@ -17,7 +17,7 @@ export function HackathonHero() {
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight animate-in slide-in-from-bottom duration-800 delay-300 cursor-pointer transition-colors duration-200" 
+          <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight cursor-pointer transition-colors duration-200" 
             style={{ color: 'rgba(209, 254, 23, 1)' }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(180, 220, 20, 1)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(209, 254, 23, 1)'}
@@ -31,7 +31,7 @@ export function HackathonHero() {
           </h1>
 
           {/* Subheading */}
-          <h2 className="text-2xl md:text-3xl font-semibold mb-12 animate-in slide-in-from-bottom duration-800 delay-500 cursor-pointer transition-colors duration-200" 
+          <h2 className="text-2xl md:text-3xl font-semibold mb-12 cursor-pointer transition-colors duration-200" 
             style={{ color: 'rgba(247, 247, 248, 1)' }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(209, 254, 23, 1)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(247, 247, 248, 1)'}
@@ -64,7 +64,7 @@ export function HackathonHero() {
           </div>
 
           {/* Description */}
-          <p className="text-base md:text-lg max-w-4xl mx-auto leading-relaxed animate-in slide-in-from-bottom duration-800 delay-1000 cursor-pointer transition-colors duration-200" 
+          <p className="text-base md:text-lg max-w-4xl mx-auto leading-relaxed cursor-pointer transition-colors duration-200" 
             style={{ color: 'rgba(153, 153, 153, 1)' }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(167, 203, 18, 1)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(153, 153, 153, 1)'}

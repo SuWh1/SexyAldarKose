@@ -15,27 +15,67 @@ export function HackathonFooter() {
 
           {/* Project Info */}
           <div className="animate-in slide-in-from-bottom duration-800 delay-400">
-            <h4 className="text-lg font-semibold mb-4 transition-colors duration-200 cursor-pointer hover:text-[rgba(95,114,23,1)]" style={{ color: 'rgba(9, 13, 14, 1)' }}>Key Features</h4>
+            <h4 className="mb-4 transition-colors duration-200 cursor-pointer" 
+              style={{ color: 'rgba(131, 155, 35, 1)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(95, 114, 23, 1)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(131, 155, 35, 1)'}
+            >
+              Key Features
+            </h4>
             <ul className="space-y-2">
-              <li className="transition-colors duration-200 cursor-pointer hover:text-[rgba(95,114,23,1)]" style={{ color: 'rgba(9, 13, 14, 1)' }}>6-10 Frame Storyboards</li>
-              <li className="transition-colors duration-200 cursor-pointer hover:text-[rgba(95,114,23,1)]" style={{ color: 'rgba(9, 13, 14, 1)' }}>Character Consistency</li>
-              <li className="transition-colors duration-200 cursor-pointer hover:text-[rgba(95,114,23,1)]" style={{ color: 'rgba(9, 13, 14, 1)' }}>LLM-Driven Flow</li>
-              <li className="transition-colors duration-200 cursor-pointer hover:text-[rgba(95,114,23,1)]" style={{ color: 'rgba(9, 13, 14, 1)' }}>Cultural Respect</li>
+              <li className="transition-colors duration-200 cursor-pointer" 
+                style={{ color: 'rgba(9, 13, 14, 1)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(95, 114, 23, 1)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(9, 13, 14, 1)'}
+              >
+                6-10 Frame Storyboards
+              </li>
+              <li className="transition-colors duration-200 cursor-pointer" 
+                style={{ color: 'rgba(9, 13, 14, 1)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(95, 114, 23, 1)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(9, 13, 14, 1)'}
+              >
+                Character Consistency
+              </li>
+              <li className="transition-colors duration-200 cursor-pointer" 
+                style={{ color: 'rgba(9, 13, 14, 1)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(95, 114, 23, 1)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(9, 13, 14, 1)'}
+              >
+                LLM-Driven Flow
+              </li>
+              <li className="transition-colors duration-200 cursor-pointer" 
+                style={{ color: 'rgba(9, 13, 14, 1)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(95, 114, 23, 1)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(9, 13, 14, 1)'}
+              >
+                Cultural Respect
+              </li>
             </ul>
           </div>
 
           {/* Event Info */}
           <div className="animate-in slide-in-from-bottom duration-800 delay-600">
-            <h4 className="text-lg font-semibold mb-4 transition-colors duration-200 cursor-pointer hover:text-[rgba(95,114,23,1)]" style={{ color: 'rgba(9, 13, 14, 1)' }}>Hackathon</h4>
+            <h4 className="mb-4 transition-colors duration-200 cursor-pointer" 
+              style={{ color: 'rgba(131, 155, 35, 1)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(95, 114, 23, 1)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(131, 155, 35, 1)'}
+            >
+              Hackathon
+            </h4>
             <div>
-              <p className="mb-2 cursor-pointer transition-colors duration-200 hover:text-[rgba(95,114,23,1)]" style={{ color: 'rgba(9, 13, 14, 1)' }}>
+              <p className="mb-2 cursor-pointer transition-colors duration-200" 
+                style={{ color: 'rgba(9, 13, 14, 1)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(95, 114, 23, 1)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(9, 13, 14, 1)'}
+              >
                 Higgsfield AI 2025
               </p>
             </div>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t text-center transition-all duration-300 hover:border-opacity-80 animate-in slide-in-from-bottom duration-800 delay-800" style={{ borderColor: 'rgba(9, 13, 14, 1)' }}>
+        <div className="mt-8 pt-8 border-t text-center transition-all duration-300 hover:border-opacity-80" style={{ borderColor: 'rgba(9, 13, 14, 1)' }}>
           <p className="transition-opacity duration-300 hover:opacity-90" style={{ color: 'rgba(9, 13, 14, 1)', opacity: 0.6 }}>
             Built with ❤️ Team Richards • <a href="https://github.com/SuWh1/SexyAldarKose" target="_blank" rel="noopener noreferrer" className="hover:underline transition-all duration-300 font-semibold">View on GitHub - SexyAldarKose</a>
           </p>
