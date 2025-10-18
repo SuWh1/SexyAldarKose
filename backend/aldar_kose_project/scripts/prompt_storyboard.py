@@ -76,32 +76,49 @@ Your task is to break down a story into 6-10 very SIMPLE scenes optimized for im
 CRITICAL RULES:
 1. Return only the minimal JSON described below (do NOT include camera or mood fields)
 2. Keep each "description" SHORT and CLEAR (action + location; max ~10 words)
-3. Prefer CLOSE, FRONT-FACING shots (close-up / portrait) so the character is recognizable
-4. Minimum 6 scenes, maximum 10 scenes
-5. Do NOT mention clothing, outfits, costumes, or physical appearance
-6. Make scenes visually distinct and show clear story progression
+3. **FRAME 1 IS MANDATORY**: Must ALWAYS be a clear FRONT-FACING portrait/close-up of aldar_kose_man's FACE
+   - Frame 1 establishes the character's identity for all subsequent frames
+   - MUST show face clearly from the front (never from back, side, or obscured)
+   - Examples: "aldar_kose_man portrait, steppe background, close-up, front-facing"
+4. FRAMES 2+: Prefer CLOSE, FRONT-FACING shots where possible (close-up / portrait)
+5. Minimum 6 scenes, maximum 10 scenes
+6. Do NOT mention clothing, outfits, costumes, or physical appearance
+7. Make scenes visually distinct and show clear story progression
+8. NEVER use back views, silhouettes, or obscured faces for Frame 1
 
 The character is "aldar_kose_man" - a clever trickster from Kazakh folklore.
 
-DESCRIPTION EXAMPLES (very simple):
+FRAME 1 EXAMPLES (MANDATORY front-facing reference):
+- "aldar_kose_man portrait, looking at camera, steppe, close-up, front-facing"
+- "aldar_kose_man face close-up, slight smile, outdoors, front-facing"
+- "aldar_kose_man head and shoulders, looking forward, yurt background, portrait"
+
+FRAMES 2+ EXAMPLES (prefer front-facing):
 - "aldar_kose_man riding horse, steppe, close-up, front-facing"
 - "aldar_kose_man dismounting horse, yurt nearby, close-up"
 - "aldar_kose_man entering yurt, close-up, warm light"
 
-BAD EXAMPLES (too zoomed out / verbose):
-- "aldar_kose_man atop his noble steed, silhouetted against the vast steppe stretching to the horizon"
+BAD EXAMPLES for Frame 1 (NEVER do this):
+- "aldar_kose_man from behind, riding away"
+- "aldar_kose_man silhouette against sunset"
+- "aldar_kose_man in the distance, wide shot"
+- "back view of aldar_kose_man"
 
 Return a JSON object EXACTLY in this format (no extra text):
 {
     "num_scenes": <number>,
     "reasoning": "<one short sentence explaining why this number>",
     "scenes": [
-        {"frame": 1, "description": "aldar_kose_man riding horse, steppe, close-up, front-facing"},
-        {"frame": 2, "description": "aldar_kose_man dismounting horse, yurt nearby, close-up"}
+        {"frame": 1, "description": "aldar_kose_man portrait, looking at camera, steppe, close-up, front-facing"},
+        {"frame": 2, "description": "aldar_kose_man riding horse, steppe, close-up, front-facing"},
+        {"frame": 3, "description": "aldar_kose_man dismounting horse, yurt nearby, close-up"}
     ]
 }
 
-Remember: DO NOT include separate "camera" or "mood" fields. Put any necessary framing (close-up/front-facing) inside the single `description` string.
+Remember: 
+- Frame 1 MUST show the face clearly from the front (this is the reference for all other frames)
+- DO NOT include separate "camera" or "mood" fields
+- Put framing instructions (close-up/front-facing/portrait) inside the `description` string
 """
 class PromptStoryboardGenerator:
     """
@@ -149,23 +166,37 @@ class PromptStoryboardGenerator:
 
 Story: "{story}"
 
-INSTRUCTIONS:
-- Decide how many scenes needed (minimum 6, maximum {max_frames})
-- Prefer CLOSE, FRONT-FACING shots (close-up / portrait) so the character is recognizable
-- Keep each description SHORT and SIMPLE (action + location + framing keywords, ~10 words)
-- Each scene must be DIFFERENT and show PROGRESSION
-- Use "aldar_kose_man" as the character identifier
-- DO NOT include separate camera or mood fields in the JSON output
+CRITICAL INSTRUCTIONS:
+1. **FRAME 1 MUST BE A REFERENCE SHOT**: 
+   - Frame 1 establishes character identity for ALL subsequent frames
+   - MUST be a clear FRONT-FACING portrait/close-up showing aldar_kose_man's FACE
+   - NEVER from back, side, silhouette, or distance
+   - Example: "aldar_kose_man portrait, looking forward, steppe background, close-up, front-facing"
+
+2. FRAMES 2-{max_frames}:
+   - Show the story progression
+   - Prefer CLOSE, FRONT-FACING shots when possible
+   - Keep descriptions SHORT and SIMPLE (action + location + framing, ~10 words)
+   - Each scene must be DIFFERENT and show PROGRESSION
+
+3. General Rules:
+   - Decide how many scenes needed (minimum 6, maximum {max_frames})
+   - Use "aldar_kose_man" as the character identifier
+   - DO NOT include separate camera or mood fields in the JSON output
+   - DO NOT mention clothing or appearance
 
 Return JSON object exactly:
 {{
     "num_scenes": <number>,
     "reasoning": "<one short sentence>",
     "scenes": [
-        {{"frame": 1, "description": "aldar_kose_man riding horse, steppe, close-up, front-facing"}},
-        {{"frame": 2, "description": "aldar_kose_man dismounting horse, yurt nearby, close-up"}}
+        {{"frame": 1, "description": "aldar_kose_man portrait, looking at camera, steppe, close-up, front-facing"}},
+        {{"frame": 2, "description": "aldar_kose_man riding horse, steppe, close-up, front-facing"}},
+        {{"frame": 3, "description": "aldar_kose_man dismounting horse, yurt nearby, close-up"}}
     ]
-}}"""
+}}
+
+REMEMBER: Frame 1 is the REFERENCE - it MUST clearly show the face from the front!"""
 
         try:
             response = self.client.chat.completions.create(
@@ -224,10 +255,26 @@ Return JSON object exactly:
                             "frame": i + 1,
                             "description": f"aldar_kose_man continuation scene {i+1}"
                         })
-
+                
+                # Validate Frame 1 is a proper reference shot
+                if scenes and len(scenes) > 0:
+                    frame1_desc = scenes[0].get("description", "").lower()
+                    bad_keywords = ["back", "behind", "silhouette", "distance", "far", "away from camera"]
+                    has_bad_keyword = any(bad in frame1_desc for bad in bad_keywords)
+                    has_front_keyword = any(kw in frame1_desc for kw in ["front", "portrait", "face", "looking", "close-up"])
+                    
+                    if has_bad_keyword or not has_front_keyword:
+                        logger.warning("Frame 1 is not a proper front-facing reference! Fixing...")
+                        # Force Frame 1 to be a clear reference shot
+                        scenes[0] = {
+                            "frame": 1,
+                            "description": "aldar_kose_man portrait, looking at camera, steppe background, close-up, front-facing"
+                        }
+                        logger.info("✓ Frame 1 fixed to be a proper front-facing reference shot")
+                
                 logger.info(f"✓ Successfully generated {len(scenes)} scenes")
                 return scenes
-
+                
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse JSON response: {e}")
                 logger.error(f"Response content: {content}")

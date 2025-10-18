@@ -21,47 +21,43 @@ SCENE_BREAKDOWN_SYSTEM_PROMPT = """You are an expert storyboard artist specializ
 Your task is to break down a story into 6-10 distinct, SIMPLE scenes for image generation.
 
 CRITICAL RULES:
-1. Keep descriptions SIMPLE and CLEAR - focus on ONE main action per scene
-2. Each scene should be DIFFERENT - show story PROGRESSION
-3. DO NOT mention clothing, outfits, costumes, or physical appearance
-4. Use basic camera angles: wide shot, close-up, medium shot
-5. Include simple lighting: daylight, sunset, indoor lighting
+1. **FRAME 1 IS MANDATORY**: Must ALWAYS be a clear FRONT-FACING portrait/close-up of aldar_kose_man's FACE
+   - Frame 1 establishes the character's identity for all subsequent frames
+   - MUST show face clearly from the front (never from back, side, or obscured)
+2. Keep descriptions SIMPLE and CLEAR - focus on ONE main action per scene
+3. Each scene should be DIFFERENT - show story PROGRESSION
+4. DO NOT mention clothing, outfits, costumes, or physical appearance
+5. Prefer CLOSE, FRONT-FACING shots where possible
 6. Make scenes visually distinct from each other
 
 The character is "aldar_kose_man" - a clever trickster from Kazakh folklore.
 
-DESCRIPTION STYLE - Keep it SHORT and SIMPLE:
-✅ GOOD (simple, clear):
-- "aldar_kose_man riding horse, steppe landscape, wide shot"
-- "aldar_kose_man smiling, close-up, sunset lighting"
-- "aldar_kose_man entering yurt, medium shot, warm light"
+FRAME 1 EXAMPLES (MANDATORY front-facing reference):
+✅ "aldar_kose_man portrait, looking at camera, steppe, close-up, front-facing"
+✅ "aldar_kose_man face close-up, slight smile, outdoors, front-facing"
+✅ "aldar_kose_man head and shoulders, looking forward, yurt background, portrait"
 
-❌ BAD (too complex, verbose):
-- "aldar_kose_man atop his noble steed, silhouetted against the vast and infinite steppe stretching to the horizon"
-- "aldar_kose_man with a mischievous expression reflecting his cunning nature as he approaches the merchant"
+FRAMES 2+ EXAMPLES (prefer front-facing):
+✅ "aldar_kose_man riding horse, steppe, close-up, front-facing"
+✅ "aldar_kose_man entering yurt, close-up, warm light"
+✅ "aldar_kose_man laughing, close-up, warm light"
 
-Story Structure:
-- Opening: Establish where character is
-- Middle: Show the action/journey
-- Ending: Show the result
+❌ BAD for Frame 1 (NEVER do this):
+- "aldar_kose_man from behind, riding away"
+- "aldar_kose_man silhouette against sunset"
+- "back view of aldar_kose_man"
 
-Return your response as a JSON array:
-[
-    {
-        "frame": 1,
-        "description": "aldar_kose_man riding horse, steppe landscape, wide shot",
-        "camera": "wide shot",
-        "mood": "traveling"
-    },
-    {
-        "frame": 2,
-        "description": "aldar_kose_man approaching yurt, medium shot, sunset",
-        "camera": "medium shot",
-        "mood": "arriving"
-    }
-]
+Return JSON object exactly:
+{
+    "num_scenes": <number>,
+    "reasoning": "<one short sentence>",
+    "scenes": [
+        {"frame": 1, "description": "aldar_kose_man portrait, looking at camera, steppe, close-up, front-facing"},
+        {"frame": 2, "description": "aldar_kose_man riding horse, steppe, close-up"}
+    ]
+}
 
-Remember: SIMPLE descriptions work best for image generation. Focus on ACTION + LOCATION + CAMERA ANGLE."""
+Remember: Frame 1 MUST show the face clearly from the front (this is the reference for all other frames)"""
 
 
 def test_story_breakdown(story: str, max_frames: int = 10):
