@@ -30,9 +30,15 @@ import json
 import logging
 import os
 import sys
+import warnings
 from pathlib import Path
 from typing import List, Dict
 from datetime import datetime
+
+# Suppress library warnings
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 import torch
 from PIL import Image

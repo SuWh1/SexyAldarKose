@@ -18,8 +18,14 @@ import os
 import random
 import shutil
 import time
+import warnings
 from pathlib import Path
 from typing import Optional, List, Dict
+
+# Suppress library warnings
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 import numpy as np
 import torch
