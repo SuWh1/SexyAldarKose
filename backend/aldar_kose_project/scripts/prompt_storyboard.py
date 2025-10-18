@@ -350,6 +350,7 @@ REMEMBER: Frame 1 is the REFERENCE - it MUST clearly show the face from the fron
         num_inference_steps: int = 40,
         guidance_scale: float = 7.5,
         max_attempts: int = 2,
+        temperature: float = 0.7,  # GPT temperature for scene breakdown
     ) -> List[Image.Image]:
         """
         Complete pipeline: story -> scenes -> images
@@ -362,6 +363,7 @@ REMEMBER: Frame 1 is the REFERENCE - it MUST clearly show the face from the fron
             num_inference_steps: SDXL steps
             guidance_scale: SDXL guidance
             max_attempts: Retry attempts per frame
+            temperature: GPT-4 creativity (0.0=deterministic, 1.0=creative)
             
         Returns:
             List of generated PIL Images
@@ -372,7 +374,7 @@ REMEMBER: Frame 1 is the REFERENCE - it MUST clearly show the face from the fron
         logger.info("=" * 60)
         
         max_frames = num_frames if num_frames is not None else 10
-        scenes = self.break_down_story(story, max_frames=max_frames)
+        scenes = self.break_down_story(story, max_frames=max_frames, temperature=temperature)
         
         # Save scene breakdown
         output_path = Path(output_dir)

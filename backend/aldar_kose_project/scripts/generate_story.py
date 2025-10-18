@@ -14,8 +14,11 @@ Usage:
 """
 
 import argparse
+import logging
+import os
 import sys
 from pathlib import Path
+from datetime import datetime
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -139,9 +142,9 @@ Examples:
         # Initialize generator
         logger.info("🔧 Initializing generator...")
         generator = PromptStoryboardGenerator(
+            openai_api_key=os.environ.get('OPENAI_API_KEY'),
             lora_path=args.lora_path,
-            use_ref_guided=args.ref_guided,
-            seed=args.seed
+            use_ref_guided=args.ref_guided
         )
         
         logger.info("✅ Generator ready!")
@@ -153,15 +156,15 @@ Examples:
         if args.output:
             output_base = f"outputs/{args.output}"
         else:
-            from datetime import datetime
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             output_base = f"outputs/terminal_generation_{timestamp}"
         
         # Generate storyboard
         generator.generate_storyboard(
-            story_prompt=args.prompt,
-            max_frames=args.frames,
-            output_base=output_base,
+            story=args.prompt,
+            num_frames=args.frames,
+            output_dir=output_base,
+            base_seed=args.seed,
             temperature=args.temperature
         )
         
