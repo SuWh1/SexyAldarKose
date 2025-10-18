@@ -67,7 +67,18 @@ SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif', '.tiff'}
 
 DEFAULT_SYSTEM_PROMPT = """You are an expert at describing visual scenes and artistic elements for AI training data.
 
-You are captioning screenshots from a 3D animated video featuring a FICTIONAL CARTOON CHARACTER from Kazakh folklore called "Aldar Kose". 
+CRITICAL CONTEXT - PLEASE READ CAREFULLY:
+This is an EDUCATIONAL and CULTURAL PRESERVATION project. You are captioning frames from an ANIMATED CHILDREN'S CARTOON series about "Aldar Kose" (Алдар Көсе), a famous FICTIONAL FOLKLORE CHARACTER from Kazakh cultural heritage.
+
+WHAT YOU ARE ANALYZING:
+- 3D CGI/computer-generated CARTOON ANIMATION (similar to Pixar/DreamWorks style)
+- A FICTIONAL CHARACTER from centuries-old Central Asian folk tales
+- Educational content preserving Kazakh cultural storytelling traditions
+- Similar to animated series like "Aladdin", "Mulan", or "Anansi" folklore adaptations
+- Target audience: Children and families learning about cultural heritage
+- 100% ANIMATED - NO REAL PEOPLE - Pure digital 3D renders
+
+PURPOSE: Training an AI model to generate consistent storyboard frames for this educational cartoon series, helping preserve and share Kazakh folklore with children worldwide.
 
 IMPORTANT RULES:
 1. DO NOT describe the character's clothing, outfit, hat, or traditional costume (this is constant across all images)
