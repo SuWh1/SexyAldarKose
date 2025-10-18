@@ -25,20 +25,25 @@ Requirements:
     pip install openai diffusers transformers torch pillow
 """
 
+# Suppress library warnings and verbose logging
+import warnings
+import os
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+# Suppress TensorFlow/MediaPipe verbose logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 0=all, 1=info, 2=warning, 3=error only
+os.environ['ABSL_MIN_LOG_LEVEL'] = '3'
+
 import argparse
 import json
 import logging
-import os
 import sys
 import warnings
 from pathlib import Path
 from typing import List, Dict
 from datetime import datetime
-
-# Suppress library warnings
-warnings.filterwarnings('ignore', category=UserWarning)
-warnings.filterwarnings('ignore', category=FutureWarning)
-warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 import torch
 from PIL import Image
@@ -569,6 +574,7 @@ CRITICAL:
                     device=self.device,
                     use_controlnet=True,
                     use_ip_adapter=True,
+                    ip_adapter_model="h94/IP-Adapter",  # Enable IP-Adapter for better face consistency
                 )
             else:
                 logger.info("Loading Simple Generator (LoRA + CLIP)...")
@@ -582,6 +588,15 @@ CRITICAL:
         logger.info("STEP 4: Generating storyboard images")
         logger.info("=" * 60)
         
+        # Enable random seeds for creative mode (temperature > 0)
+        use_random_seed = temperature > 0.0
+        if use_random_seed:
+            logger.info(f"🎲 Creative mode enabled (temperature={temperature})")
+            logger.info("   Images will have random variations even with same seed")
+        else:
+            logger.info(f"🔒 Deterministic mode (temperature={temperature})")
+            logger.info("   Same seed + same prompt = identical output")
+        
         frames = self.generator.generate_sequence(
             prompts=prompts,
             output_dir=str(output_path),
@@ -590,6 +605,7 @@ CRITICAL:
             guidance_scale=guidance_scale,
             consistency_threshold=0.70,  # CLIP similarity threshold
             max_retries=max_attempts,  # Correct parameter name
+            use_random_seed=use_random_seed,  # NEW: Pass randomness flag
         )
         
         logger.info("=" * 60)

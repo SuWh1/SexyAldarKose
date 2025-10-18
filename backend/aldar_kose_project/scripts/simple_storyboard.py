@@ -13,6 +13,17 @@ Use this if you don't have enough VRAM for ControlNet + IP-Adapter.
 For full consistency pipeline, use storyboard_generator.py instead.
 """
 
+# Suppress library warnings and verbose logging
+import warnings
+import os
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+# Suppress TensorFlow/MediaPipe verbose logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 0=all, 1=info, 2=warning, 3=error only
+os.environ['ABSL_MIN_LOG_LEVEL'] = '3'
+
 import argparse
 import json
 import logging
@@ -175,6 +186,7 @@ class SimplifiedStoryboardGenerator:
         consistency_threshold: float = 0.65,
         max_retries: int = 3,
         output_dir: str = "./simple_storyboard",
+        use_random_seed: bool = False,  # NEW: Enable randomness for creative mode
     ) -> List[Image.Image]:
         """
         Generate sequence of story frames with character consistency
@@ -185,6 +197,9 @@ class SimplifiedStoryboardGenerator:
         - CLIP validation against first frame (face similarity)
         - Different seeds for scene variety
         - Retry if character doesn't match
+        
+        Args:
+            use_random_seed: If True, adds randomness to seeds (for temp > 0 creative mode)
         """
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
@@ -205,8 +220,17 @@ class SimplifiedStoryboardGenerator:
             for attempt in range(max_retries):
                 logger.info(f"Attempt {attempt + 1}/{max_retries}...")
                 
-                # Unique seed per frame (for variety) + attempt offset (for retries)
-                seed = base_seed + (idx * 1000) + (attempt * 10)
+                # Seed calculation with optional randomness
+                if use_random_seed:
+                    # Add random component for creative mode (temperature > 0)
+                    import random
+                    random_offset = random.randint(0, 9999)
+                    seed = base_seed + (idx * 1000) + (attempt * 10) + random_offset
+                    logger.info(f"  Creative mode: seed {seed} (random offset: {random_offset})")
+                else:
+                    # Deterministic seed for reproducibility (temperature = 0)
+                    seed = base_seed + (idx * 1000) + (attempt * 10)
+                
                 generator = torch.Generator(device=self.device).manual_seed(seed)
                 
                 # Determine CFG based on previous failures

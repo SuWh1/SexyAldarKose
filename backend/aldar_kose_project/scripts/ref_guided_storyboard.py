@@ -80,7 +80,7 @@ class ReferenceGuidedStoryboardGenerator:
         base_model: str = "stabilityai/stable-diffusion-xl-base-1.0",
         lora_path: Optional[str] = None,
         controlnet_model: str = "thibaud/controlnet-openpose-sdxl-1.0",
-        ip_adapter_model: Optional[str] = None,
+        ip_adapter_model: Optional[str] = "h94/IP-Adapter",  # Default HuggingFace model
         device: str = "cuda",
         dtype: torch.dtype = torch.float16,
         use_ip_adapter: bool = True,
@@ -175,11 +175,31 @@ class ReferenceGuidedStoryboardGenerator:
             if ip_adapter_model:
                 logger.info("Loading IP-Adapter...")
                 try:
+                    # Download IP-Adapter weights if needed
+                    from huggingface_hub import hf_hub_download
+                    
+                    # Download SDXL IP-Adapter model
+                    ip_adapter_path = hf_hub_download(
+                        repo_id="h94/IP-Adapter",
+                        filename="sdxl_models/ip-adapter_sdxl.bin",
+                        cache_dir=cache_dir
+                    )
+                    
+                    # Download image encoder
+                    image_encoder_path = hf_hub_download(
+                        repo_id="h94/IP-Adapter", 
+                        filename="sdxl_models/image_encoder/config.json",
+                        cache_dir=cache_dir
+                    )
+                    
+                    logger.info(f"  IP-Adapter weights: {ip_adapter_path}")
+                    
                     # IP-Adapter wraps the pipeline
                     target_pipe = self.controlnet_pipe if self.controlnet_pipe else self.base_pipe
                     self.ip_adapter = IPAdapterXL(
                         target_pipe,
-                        ip_adapter_model,
+                        image_encoder_path=image_encoder_path,
+                        ip_ckpt=ip_adapter_path,
                         device=device,
                     )
                     logger.info("✓ IP-Adapter loaded!")

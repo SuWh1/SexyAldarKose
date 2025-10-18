@@ -13,10 +13,19 @@ Usage:
     python scripts/generate_story.py "Aldar on horseback" --seed 42 --temp 0.0 --ref-guided --frames 8
 """
 
+# Suppress library warnings and verbose logging
+import warnings
+import os
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+# Suppress TensorFlow/MediaPipe verbose logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 0=all, 1=info, 2=warning, 3=error only
+os.environ['ABSL_MIN_LOG_LEVEL'] = '3'
+
 import argparse
 import logging
-import os
-import sys
 from pathlib import Path
 from datetime import datetime
 
@@ -24,6 +33,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from scripts.prompt_storyboard import PromptStoryboardGenerator
+import sys
 import logging
 
 logging.basicConfig(

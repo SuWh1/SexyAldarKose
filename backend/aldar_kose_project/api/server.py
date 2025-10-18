@@ -11,21 +11,25 @@ Usage:
     python api/server.py
 """
 
+# Suppress library warnings and verbose logging
+import warnings
+import os
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+# Suppress TensorFlow/MediaPipe verbose logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 0=all, 1=info, 2=warning, 3=error only
+os.environ['ABSL_MIN_LOG_LEVEL'] = '3'
+
 import argparse
 import base64
 import io
 import logging
-import os
 import sys
-import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
-
-# Suppress library warnings
-warnings.filterwarnings('ignore', category=UserWarning)
-warnings.filterwarnings('ignore', category=FutureWarning)
-warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

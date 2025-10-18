@@ -16,6 +16,17 @@ Uses:
 4. Automatic regeneration with adjusted parameters
 """
 
+# Suppress library warnings and verbose logging
+import warnings
+import os
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+# Suppress TensorFlow/MediaPipe verbose logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 0=all, 1=info, 2=warning, 3=error only
+os.environ['ABSL_MIN_LOG_LEVEL'] = '3'
+
 import logging
 from typing import Dict, List, Tuple, Optional
 from pathlib import Path
@@ -39,6 +50,8 @@ try:
 except ImportError:
     HAS_MEDIAPIPE = False
     logger.warning("MediaPipe not available - pose detection disabled")
+    logger.warning("Install with: pip install mediapipe")
+    logger.warning("Fallback: Using face detection only")
 
 try:
     from transformers import CLIPProcessor, CLIPModel
@@ -83,6 +96,9 @@ class AnomalyDetector:
             self.face_cascade = cv2.CascadeClassifier(
                 cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
             )
+            logger.info("✓ OpenCV face detection ready")
+        else:
+            logger.warning("⚠️  OpenCV not available - face detection disabled")
         
         # Initialize pose detection
         if HAS_MEDIAPIPE:
@@ -99,6 +115,14 @@ class AnomalyDetector:
                 model_selection=1,  # Full range detector
                 min_detection_confidence=0.5,
             )
+            logger.info("✓ MediaPipe Pose & Face detection ready")
+        else:
+            logger.warning("⚠️  MediaPipe not available - pose detection disabled")
+            logger.warning("    Install: pip install mediapipe")
+            self.mp_pose = None
+            self.pose = None
+            self.mp_face = None
+            self.face_detection = None
         
         # Initialize CLIP for semantic validation
         if HAS_CLIP:
@@ -106,7 +130,19 @@ class AnomalyDetector:
             self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
             self.clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
             self.clip_model.eval()
+            logger.info("✓ CLIP model ready")
+        else:
+            logger.warning("⚠️  CLIP not available - semantic validation disabled")
+            self.clip_model = None
+            self.clip_processor = None
         
+        # Summary of available detectors
+        logger.info("=" * 60)
+        logger.info("Anomaly Detection Components:")
+        logger.info(f"  Face Detection: {'✓ OpenCV' if HAS_OPENCV else '✗ Disabled'}")
+        logger.info(f"  Pose Detection: {'✓ MediaPipe' if HAS_MEDIAPIPE else '✗ Disabled'}")
+        logger.info(f"  Semantic Check: {'✓ CLIP' if HAS_CLIP else '✗ Disabled'}")
+        logger.info("=" * 60)
         logger.info("✓ Anomaly Detector initialized")
     
     def detect_anomalies(
@@ -191,33 +227,43 @@ class AnomalyDetector:
         result = {'count': 0, 'locations': []}
         
         if not HAS_OPENCV and not HAS_MEDIAPIPE:
+            logger.warning("No face detection available - skipping face count check")
             return result
         
         # Try MediaPipe first (more accurate)
-        if HAS_MEDIAPIPE:
-            image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
-            results = self.face_detection.process(image_rgb)
-            
-            if results.detections:
-                result['count'] = len(results.detections)
-                for detection in results.detections:
-                    bbox = detection.location_data.relative_bounding_box
-                    result['locations'].append({
-                        'x': bbox.xmin,
-                        'y': bbox.ymin,
-                        'w': bbox.width,
-                        'h': bbox.height,
-                    })
+        if HAS_MEDIAPIPE and self.face_detection:
+            try:
+                image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+                results = self.face_detection.process(image_rgb)
+                
+                if results.detections:
+                    result['count'] = len(results.detections)
+                    for detection in results.detections:
+                        bbox = detection.location_data.relative_bounding_box
+                        result['locations'].append({
+                            'x': bbox.xmin,
+                            'y': bbox.ymin,
+                            'w': bbox.width,
+                            'h': bbox.height,
+                        })
+                    logger.debug(f"MediaPipe detected {result['count']} faces")
+                    return result
+            except Exception as e:
+                logger.warning(f"MediaPipe face detection failed: {e}")
         
         # Fallback to OpenCV Haar Cascade
-        elif HAS_OPENCV:
-            gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
-            faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
-            result['count'] = len(faces)
-            result['locations'] = [
-                {'x': x, 'y': y, 'w': w, 'h': h}
-                for (x, y, w, h) in faces
-            ]
+        if HAS_OPENCV:
+            try:
+                gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
+                faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
+                result['count'] = len(faces)
+                result['locations'] = [
+                    {'x': x, 'y': y, 'w': w, 'h': h}
+                    for (x, y, w, h) in faces
+                ]
+                logger.debug(f"OpenCV detected {result['count']} faces")
+            except Exception as e:
+                logger.warning(f"OpenCV face detection failed: {e}")
         
         return result
     
@@ -229,40 +275,48 @@ class AnomalyDetector:
             'keypoints': None,
         }
         
-        if not HAS_MEDIAPIPE:
+        if not HAS_MEDIAPIPE or not self.pose:
+            logger.debug("MediaPipe pose detection not available")
             return result
         
-        results = self.pose.process(image_rgb)
+        try:
+            results = self.pose.process(image_rgb)
+            
+            if results.pose_landmarks:
+                result['detected'] = True
+                landmarks = results.pose_landmarks.landmark
+                
+                # Check for duplicate body parts (e.g., two left arms)
+                # MediaPipe gives 33 keypoints
+                keypoint_confidences = [lm.visibility for lm in landmarks]
+                result['keypoints'] = len([c for c in keypoint_confidences if c > 0.5])
+                logger.debug(f"Pose: {result['keypoints']} visible keypoints")
+                
+                # Check for deformed poses
+                # Example: shoulders should be roughly aligned
+                left_shoulder = landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER]
+                right_shoulder = landmarks[self.mp_pose.PoseLandmark.RIGHT_SHOULDER]
+                
+                if left_shoulder.visibility > 0.5 and right_shoulder.visibility > 0.5:
+                    shoulder_y_diff = abs(left_shoulder.y - right_shoulder.y)
+                    if shoulder_y_diff > 0.3:  # Shoulders too misaligned
+                        result['anomalies'].append("DEFORMED_POSE (misaligned shoulders)")
+                        logger.debug(f"Deformed pose detected: shoulder_y_diff={shoulder_y_diff:.2f}")
+                
+                # Check for missing critical body parts
+                critical_parts = [
+                    self.mp_pose.PoseLandmark.NOSE,
+                    self.mp_pose.PoseLandmark.LEFT_SHOULDER,
+                    self.mp_pose.PoseLandmark.RIGHT_SHOULDER,
+                ]
+                
+                visible_parts = sum(1 for part in critical_parts if landmarks[part].visibility > 0.5)
+                if visible_parts < 2:
+                    result['anomalies'].append("MISSING_BODY_PARTS")
+                    logger.debug(f"Missing body parts: {visible_parts}/3 critical parts visible")
         
-        if results.pose_landmarks:
-            result['detected'] = True
-            landmarks = results.pose_landmarks.landmark
-            
-            # Check for duplicate body parts (e.g., two left arms)
-            # MediaPipe gives 33 keypoints
-            keypoint_confidences = [lm.visibility for lm in landmarks]
-            result['keypoints'] = len([c for c in keypoint_confidences if c > 0.5])
-            
-            # Check for deformed poses
-            # Example: shoulders should be roughly aligned
-            left_shoulder = landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER]
-            right_shoulder = landmarks[self.mp_pose.PoseLandmark.RIGHT_SHOULDER]
-            
-            if left_shoulder.visibility > 0.5 and right_shoulder.visibility > 0.5:
-                shoulder_y_diff = abs(left_shoulder.y - right_shoulder.y)
-                if shoulder_y_diff > 0.3:  # Shoulders too misaligned
-                    result['anomalies'].append("DEFORMED_POSE (misaligned shoulders)")
-            
-            # Check for missing critical body parts
-            critical_parts = [
-                self.mp_pose.PoseLandmark.NOSE,
-                self.mp_pose.PoseLandmark.LEFT_SHOULDER,
-                self.mp_pose.PoseLandmark.RIGHT_SHOULDER,
-            ]
-            
-            visible_parts = sum(1 for part in critical_parts if landmarks[part].visibility > 0.5)
-            if visible_parts < 2:
-                result['anomalies'].append("MISSING_BODY_PARTS")
+        except Exception as e:
+            logger.warning(f"Pose detection error: {e}")
         
         return result
     
@@ -302,27 +356,33 @@ class AnomalyDetector:
         expected_prompt: str,
     ) -> Dict:
         """Check if image semantically matches expected prompt"""
-        if not HAS_CLIP:
+        if not HAS_CLIP or not self.clip_model:
+            logger.debug("CLIP not available - skipping semantic alignment check")
             return {'score': 0.5, 'aligned': True}
         
-        # Prepare inputs
-        inputs = self.clip_processor(
-            text=[expected_prompt],
-            images=image,
-            return_tensors="pt",
-            padding=True,
-        ).to(self.device)
-        
-        # Get CLIP scores
-        with torch.no_grad():
-            outputs = self.clip_model(**inputs)
-            logits_per_image = outputs.logits_per_image
-            score = torch.sigmoid(logits_per_image).cpu().item()
-        
-        return {
-            'score': score,
-            'aligned': score > 0.22,  # Threshold for semantic alignment
-        }
+        try:
+            # Prepare inputs
+            inputs = self.clip_processor(
+                text=[expected_prompt],
+                images=image,
+                return_tensors="pt",
+                padding=True,
+            ).to(self.device)
+            
+            # Get CLIP scores
+            with torch.no_grad():
+                outputs = self.clip_model(**inputs)
+                logits_per_image = outputs.logits_per_image
+                score = torch.sigmoid(logits_per_image).cpu().item()
+            
+            logger.debug(f"CLIP semantic alignment score: {score:.3f}")
+            return {
+                'score': score,
+                'aligned': score > 0.22,  # Threshold for semantic alignment
+            }
+        except Exception as e:
+            logger.warning(f"CLIP semantic alignment error: {e}")
+            return {'score': 0.5, 'aligned': True}  # Default to aligned if error
     
     def _calculate_confidence(self, details: Dict, anomalies: List[str]) -> float:
         """Calculate overall confidence score (0-1)"""
