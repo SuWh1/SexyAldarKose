@@ -6,7 +6,7 @@ import { TeamSection } from './components/TeamSection';
 
 function App() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ backgroundColor: 'rgba(0, 0, 0, 1)' }}>
       <HackathonHeader />
       
       <main>

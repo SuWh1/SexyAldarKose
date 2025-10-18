@@ -12,21 +12,24 @@ export function HackathonHeader() {
   };
 
   return (
-    <header className="shadow-sm sticky top-0 z-[1100] transition-all duration-300 relative border-b" style={{ backgroundColor: 'rgba(9, 13, 14, 1)', borderBottomColor: 'rgba(153, 153, 153, 0.2)' }}>
+    <header className="shadow-sm sticky top-0 z-[1100] transition-all duration-300 relative border-b" style={{ backgroundColor: 'rgba(0, 0, 0, 1)', borderBottomColor: 'rgba(153, 153, 153, 0.2)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <div className="flex items-center gap-3 group cursor-pointer">
+            <a href="/" className="flex items-center gap-3 group cursor-pointer">
               <img 
                 src="/icon.png" 
                 alt="SexyAldarKose" 
                 className="h-10 w-10 object-contain"
               />
-              <h1 className="text-2xl font-bold transition-colors duration-200 group-hover:text-[rgba(209,254,23,1)]" style={{ color: 'rgba(247, 247, 248, 1)' }}>
+              <h1 className="text-2xl font-bold transition-colors duration-200" style={{ color: 'rgba(247, 247, 248, 1)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(209, 254, 23, 1)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(247, 247, 248, 1)'}
+              >
                 SexyAldarKose
               </h1>
-            </div>
+            </a>
           </div>
 
           {/* Desktop Navigation */}
@@ -95,7 +98,7 @@ export function HackathonHeader() {
               ? 'opacity-100 translate-y-0 scale-y-100' 
               : 'opacity-0 -translate-y-2 scale-y-95 pointer-events-none'
           }`}
-          style={{ transformOrigin: 'top', backgroundColor: 'rgba(9, 13, 14, 1)', borderColor: 'rgba(153, 153, 153, 0.3)' }}
+          style={{ transformOrigin: 'top', backgroundColor: 'rgba(0, 0, 0, 1)', borderColor: 'rgba(153, 153, 153, 0.3)' }}
         >
           <div className="px-2 pt-2 pb-3 space-y-1">
             <button

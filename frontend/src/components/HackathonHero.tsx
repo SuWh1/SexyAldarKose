@@ -1,6 +1,6 @@
 export function HackathonHero() {
   return (
-    <section className="py-12 animate-in fade-in duration-1000" style={{ backgroundColor: 'rgba(9, 13, 14, 1)' }}>
+    <section className="py-12 animate-in fade-in duration-1000" style={{ backgroundColor: 'rgba(0, 0, 0, 1)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           {/* Badge */}
@@ -17,7 +17,11 @@ export function HackathonHero() {
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight animate-in slide-in-from-bottom duration-800 delay-300" style={{ color: 'rgba(209, 254, 23, 1)' }}>
+          <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight animate-in slide-in-from-bottom duration-800 delay-300 cursor-pointer transition-colors duration-200" 
+            style={{ color: 'rgba(209, 254, 23, 1)' }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(180, 220, 20, 1)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(209, 254, 23, 1)'}
+          >
             <span className="inline-block">
               Aldar Köse
             </span><br />
@@ -27,31 +31,44 @@ export function HackathonHero() {
           </h1>
 
           {/* Subheading */}
-          <h2 className="text-2xl md:text-3xl font-semibold mb-12 animate-in slide-in-from-bottom duration-800 delay-500" style={{ color: 'rgba(247, 247, 248, 1)' }}>
-            Reimagining Kazakh folklore through AI<br />
+          <h2 className="text-2xl md:text-3xl font-semibold mb-12 animate-in slide-in-from-bottom duration-800 delay-500 cursor-pointer transition-colors duration-200" 
+            style={{ color: 'rgba(247, 247, 248, 1)' }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(209, 254, 23, 1)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(247, 247, 248, 1)'}
+          >
             From script to storyboard in seconds
           </h2>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center my-12 animate-in slide-in-from-bottom duration-800 delay-700">
-            <a 
-              href="#approach"
-              className="px-8 py-4 rounded-lg text-xl font-semibold transition-all duration-200 hover:brightness-90 shadow-lg inline-block text-center"
+          {/* Prompt Input */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center my-12 max-w-4xl mx-auto animate-in slide-in-from-bottom duration-800 delay-700">
+            <input 
+              type="text"
+              placeholder="Describe the scene with Aldar Kose"
+              className="flex-1 px-6 py-4 rounded-2xl text-lg transition-all duration-200 placeholder:text-[rgba(160,160,160,1)]"
+              style={{ 
+                backgroundColor: 'rgba(17, 17, 17, 1)', 
+                color: 'rgba(247, 247, 248, 1)',
+                border: '1px solid rgba(27, 29, 17, 1)',
+                outline: 'none'
+              }}
+            />
+            <button 
+              className="px-8 py-4 rounded-2xl text-lg font-semibold transition-all duration-200 hover:brightness-90 shadow-lg whitespace-nowrap flex items-center gap-2"
               style={{ backgroundColor: 'rgba(209, 254, 23, 1)', color: 'rgba(9, 13, 14, 1)' }}
             >
-              Learn More →
-            </a>
-            <a 
-              href="#team"
-              className="px-8 py-4 rounded-lg text-xl font-semibold border-2 transition-all duration-200 hover:brightness-110 inline-block text-center"
-              style={{ borderColor: 'rgba(209, 254, 23, 1)', color: 'rgba(209, 254, 23, 1)' }}
-            >
-              Meet the Team →
-            </a>
+              Generate
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.8525 4.21651L11.7221 3.2387C11.6906 3.00226 11.4889 2.82568 11.2504 2.82568C11.0118 2.82568 10.8102 3.00226 10.7786 3.23869L10.6483 4.21651C10.2658 7.0847 8.00939 9.34115 5.14119 9.72358L4.16338 9.85396C3.92694 9.88549 3.75037 10.0872 3.75037 10.3257C3.75037 10.5642 3.92694 10.7659 4.16338 10.7974L5.14119 10.9278C8.00938 11.3102 10.2658 13.5667 10.6483 16.4349L10.7786 17.4127C10.8102 17.6491 11.0118 17.8257 11.2504 17.8257C11.4889 17.8257 11.6906 17.6491 11.7221 17.4127L11.8525 16.4349C12.2349 13.5667 14.4913 11.3102 17.3595 10.9278L18.3374 10.7974C18.5738 10.7659 18.7504 10.5642 18.7504 10.3257C18.7504 10.0872 18.5738 9.88549 18.3374 9.85396L17.3595 9.72358C14.4913 9.34115 12.2349 7.0847 11.8525 4.21651Z" fill="currentColor"></path>
+              </svg>
+            </button>
           </div>
 
           {/* Description */}
-          <p className="text-base md:text-lg max-w-4xl mx-auto leading-relaxed animate-in slide-in-from-bottom duration-800 delay-1000" style={{ color: 'rgba(153, 153, 153, 1)' }}>
+          <p className="text-base md:text-lg max-w-4xl mx-auto leading-relaxed animate-in slide-in-from-bottom duration-800 delay-1000 cursor-pointer transition-colors duration-200" 
+            style={{ color: 'rgba(153, 153, 153, 1)' }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(167, 203, 18, 1)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(153, 153, 153, 1)'}
+          >
             An intelligent system that automatically generates 6-10 frame storyboards from 
             short scripts, bringing Aldar Köse's adventures to life with AI-powered visual storytelling.
           </p>
