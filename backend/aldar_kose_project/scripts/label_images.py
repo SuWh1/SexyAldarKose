@@ -69,31 +69,35 @@ DEFAULT_SYSTEM_PROMPT = """You are an expert at describing visual scenes and art
 
 You are captioning screenshots from a 3D animated video featuring a FICTIONAL CARTOON CHARACTER from Kazakh folklore called "Aldar Kose". 
 
-DO NOT try to identify anyone. Instead, describe the VISUAL SCENE OBJECTIVELY:
-- Artistic style (3D animation, CGI render, cartoon style)
-- Character's pose, clothing, and visible features
-- Background and setting
-- Colors, lighting, composition
-- Action or activity shown
+IMPORTANT RULES:
+1. DO NOT describe the character's clothing, outfit, hat, or traditional costume (this is constant across all images)
+2. DO NOT describe his physical appearance or facial features (the model already knows this)
+3. FOCUS ONLY ON: pose, expression, action, setting, background, lighting, camera angle, artistic style
 
-This is animation training data for learning artistic styles and character consistency.
+This is training data where the character's IDENTITY and CLOTHING are already learned. Only describe WHAT HE'S DOING and WHERE.
 
 Guidelines:
 1. Start your caption with "aldar_kose_man" as an identifier token
-2. Describe the visual scene objectively (pose, clothing, setting, activity)
-3. Mention artistic style (3D render, animation, CGI)
-4. Include background and environment details
-5. Note colors, lighting, and composition
-6. Keep captions 50-150 characters
-7. Use descriptive visual language
+2. Describe ONLY: pose, facial expression, action/activity, setting/location
+3. Mention artistic style (3D render, CGI, cartoon style) and shot type (close-up, wide shot, etc.)
+4. Include background/environment details and lighting
+5. DO NOT mention clothing, outfit, costume, hat, traditional dress, etc.
+6. Keep captions 40-100 characters focused on action and setting
+7. Use action-focused descriptive language
 
-Example captions:
-- "aldar_kose_man character in traditional blue coat, outdoor village scene, 3D animation"
-- "aldar_kose_man animated figure on horseback, detailed CGI, cinematic lighting"
-- "aldar_kose_man cartoon character smiling, colorful clothing, bright scene"
-- "aldar_kose_man 3D model in formal pose, ornate costume, studio background"
+Example captions (GOOD):
+- "aldar_kose_man standing in village marketplace, smiling, 3D animation, wide shot"
+- "aldar_kose_man riding horse across steppe, dynamic pose, cinematic lighting"
+- "aldar_kose_man laughing heartily, close-up portrait, studio lighting"
+- "aldar_kose_man sitting by campfire, storytelling gesture, warm atmosphere"
+- "aldar_kose_man walking confidently, outdoor scene, dramatic sunset lighting"
 
-Focus on objective visual description of the animated scene."""
+Example captions (BAD - DO NOT USE):
+- "aldar_kose_man in blue traditional coat and hat" ❌ (mentions clothing)
+- "aldar_kose_man wearing ornate costume" ❌ (mentions outfit)
+- "aldar_kose_man with colorful traditional dress" ❌ (mentions clothing)
+
+Focus on ACTION, SETTING, and MOOD - NOT clothing or appearance."""
 
 
 class ImageLabeler:
@@ -198,7 +202,7 @@ class ImageLabeler:
         base64_image = self.encode_image(image_path)
         
         # Prepare prompt
-        user_prompt = custom_prompt or "Describe the visual elements of this 3D animated scene objectively: character pose, clothing, setting, artistic style, colors, and composition. This is animation training data, not a real person."
+        user_prompt = custom_prompt or "Describe this 3D animated scene focusing ONLY on: character's pose, facial expression, action/activity, setting/location, background, lighting, and camera angle. DO NOT describe clothing, outfit, or physical appearance. This is animation training data where the character identity is already known."
         
         # Make API call with retry logic
         for attempt in range(self.retry_attempts):
