@@ -30,9 +30,9 @@ export function TeamSection() {
               />
             </div>
             <div className="text-2xl font-bold mb-4 transition-colors duration-200" 
-              style={{ color: 'rgba(209, 254, 23, 1)' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(180, 220, 20, 1)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(209, 254, 23, 1)'}
+              style={{ color: 'rgba(247, 247, 248, 1)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(209, 254, 23, 1)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(247, 247, 248, 1)'}
             >
               Dauren
             </div>
@@ -57,9 +57,9 @@ export function TeamSection() {
               />
             </div>
             <div className="text-2xl font-bold mb-4 transition-colors duration-200" 
-              style={{ color: 'rgba(209, 254, 23, 1)' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(180, 220, 20, 1)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(209, 254, 23, 1)'}
+              style={{ color: 'rgba(247, 247, 248, 1)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(209, 254, 23, 1)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(247, 247, 248, 1)'}
             >
               Fatikh
             </div>
