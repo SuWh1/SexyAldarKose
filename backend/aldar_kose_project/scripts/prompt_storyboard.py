@@ -96,22 +96,40 @@ CRITICAL RULES:
    - Character should be PROPERLY VISIBLE (not zoomed too close, not too far)
    - Examples: "aldar_kose_man portrait, looking at camera, steppe background, front-facing"
 4. FRAMES 2+: Ensure aldar_kose_man is PROPERLY VISIBLE and recognizable in each frame
-5. Minimum 6 scenes, maximum 10 scenes
-6. Do NOT mention clothing, outfits, costumes, or physical appearance
-7. Make scenes visually distinct and show clear story progression
-8. NEVER use back views, silhouettes, or obscured faces for Frame 1
+5. **BACKGROUND CONSISTENCY**: Keep the background/setting CONSISTENT across frames
+   - If story starts in steppe, keep steppe background unless story explicitly changes location
+   - If story is at a bazaar, keep bazaar setting throughout
+   - Only change background when the story CLEARLY indicates a location change
+   - Always EXPLICITLY mention the background/setting in each frame description
+   - Examples: "steppe background", "yurt setting", "bazaar background", "mountain backdrop"
+6. Minimum 6 scenes, maximum 10 scenes
+7. Do NOT mention clothing, outfits, costumes, or physical appearance
+8. Make scenes visually distinct through ACTION, not background changes
+9. NEVER use back views, silhouettes, or obscured faces for Frame 1
 
 The character is "aldar_kose_man" - a clever trickster from Kazakh folklore.
 
-FRAME 1 EXAMPLES (MANDATORY front-facing reference):
+FRAME 1 EXAMPLES (MANDATORY front-facing reference with clear background):
 - "aldar_kose_man portrait, looking at camera, steppe background, front-facing"
-- "aldar_kose_man facing camera, slight smile, outdoors, front-facing"
-- "aldar_kose_man looking forward, yurt background, portrait, front-facing"
+- "aldar_kose_man facing camera, slight smile, bazaar background, front-facing"
+- "aldar_kose_man looking forward, yurt setting, portrait, front-facing"
 
-FRAMES 2+ EXAMPLES (character properly visible):
-- "aldar_kose_man riding horse, steppe, front-facing"
-- "aldar_kose_man dismounting horse, yurt nearby"
-- "aldar_kose_man entering yurt, warm light"
+GOOD BACKGROUND CONSISTENCY EXAMPLES:
+Story in steppe:
+  Frame 1: "aldar_kose_man portrait, steppe background, front-facing"
+  Frame 2: "aldar_kose_man riding horse, steppe background"
+  Frame 3: "aldar_kose_man dismounting horse, steppe background"
+  Frame 4: "aldar_kose_man celebrating victory, steppe background"
+
+Story at bazaar:
+  Frame 1: "aldar_kose_man portrait, bazaar background, front-facing"
+  Frame 2: "aldar_kose_man talking to merchant, bazaar background"
+  Frame 3: "aldar_kose_man pointing at goods, bazaar background"
+
+BAD EXAMPLES (inconsistent backgrounds - AVOID):
+- Frame 1: steppe, Frame 2: mountains, Frame 3: desert, Frame 4: village
+- Changing location every frame when story doesn't indicate movement
+- Omitting background/setting from frame descriptions
 
 BAD EXAMPLES for Frame 1 (NEVER do this):
 - "aldar_kose_man from behind, riding away"
@@ -190,15 +208,24 @@ CRITICAL INSTRUCTIONS:
    - MUST be a clear FRONT-FACING portrait showing aldar_kose_man's FACE
    - NEVER from back, side, silhouette, or distance
    - Character should be PROPERLY VISIBLE (not too zoomed in)
+   - MUST include clear background/setting (e.g., "steppe background", "bazaar background")
    - Example: "aldar_kose_man portrait, looking forward, steppe background, front-facing"
 
-2. FRAMES 2-{max_frames}:
-   - Show the story progression
-   - Ensure aldar_kose_man is PROPERLY VISIBLE in each frame
-   - Keep descriptions SHORT and SIMPLE (action + location + framing, ~10 words)
-   - Each scene must be DIFFERENT and show PROGRESSION
+2. **BACKGROUND CONSISTENCY**:
+   - Identify the PRIMARY SETTING from the story (steppe, bazaar, yurt, mountain, village, etc.)
+   - Keep this SAME background/setting in ALL frames unless story explicitly changes location
+   - ALWAYS mention the background in EVERY frame description
+   - Example: If story is about a race → all frames should have "steppe background"
+   - Example: If story is about a bazaar trick → all frames should have "bazaar background"
+   - Only change background if story clearly indicates character moves to a different place
 
-3. General Rules:
+3. FRAMES 2-{max_frames}:
+   - Show the story progression through CHARACTER ACTIONS, not background changes
+   - Ensure aldar_kose_man is PROPERLY VISIBLE in each frame
+   - Keep descriptions SHORT and SIMPLE (action + consistent background, ~10 words)
+   - Always include the background/setting explicitly
+
+4. General Rules:
    - Decide how many scenes needed (minimum 6, maximum {max_frames})
    - Use "aldar_kose_man" as the character identifier
    - DO NOT include separate camera or mood fields in the JSON output
