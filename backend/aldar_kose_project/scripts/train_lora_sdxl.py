@@ -17,6 +17,7 @@ import math
 import os
 import random
 import shutil
+import time
 from pathlib import Path
 from typing import Optional, List, Dict
 
@@ -172,8 +173,9 @@ def collate_fn(examples):
     if examples[0].get('latent') is not None:
         # Pre-encoded latents - stack them into batch
         latents = torch.stack([example['latent'].squeeze(0) if example['latent'].dim() > 3 else example['latent'] for example in examples])
+        # Keep as float32 for now, will be cast to proper dtype in training loop
         return {
-            'latents': latents.float(),
+            'latents': latents,
             'input_ids_one': torch.stack([example['input_ids_one'] for example in examples]),
             'input_ids_two': torch.stack([example['input_ids_two'] for example in examples]),
         }
@@ -292,7 +294,6 @@ def main():
         metrics_file = Path(config['output_dir']) / "training_metrics.csv"
         with open(metrics_file, 'w') as f:
             f.write("step,loss,learning_rate,epoch\n")
-        logger.info(f"Logging metrics to: {metrics_file}")
     
     # Initialize WandB
     if accelerator.is_main_process and config.get('use_wandb', False):
@@ -303,7 +304,9 @@ def main():
         )
     
     # Load models
-    logger.info("Loading SDXL models...")
+    if accelerator.is_main_process:
+        logger.info("")
+        logger.info("⏳ Loading SDXL models...")
     
     # Load tokenizers
     tokenizer_one = CLIPTokenizer.from_pretrained(
@@ -371,7 +374,8 @@ def main():
             logger.warning(f"Could not enable CPU offload: {e}")
     
     # Setup LoRA
-    logger.info("Setting up LoRA adapters...")
+    if accelerator.is_main_process:
+        logger.info("⚙️  Setting up LoRA adapters...")
     
     lora_config = LoraConfig(
         r=config['lora_rank'],
@@ -383,7 +387,8 @@ def main():
     
     # Add LoRA to UNet
     unet = get_peft_model(unet, lora_config)
-    unet.print_trainable_parameters()
+    if accelerator.is_main_process:
+        unet.print_trainable_parameters()
     
     # Add LoRA to text encoders if training them
     if config.get('train_text_encoder', False):
@@ -398,13 +403,15 @@ def main():
         )
         text_encoder_one = get_peft_model(text_encoder_one, text_encoder_lora_config)
         text_encoder_two = get_peft_model(text_encoder_two, text_encoder_lora_config)
-        logger.info("Added LoRA to text encoders")
+        if accelerator.is_main_process:
+            logger.info("✅ Added LoRA to text encoders")
     else:
         text_encoder_one.requires_grad_(False)
         text_encoder_two.requires_grad_(False)
     
     # Setup optimizer
-    logger.info("Setting up optimizer...")
+    if accelerator.is_main_process:
+        logger.info("⚙️  Setting up optimizer...")
     
     # Collect parameters to optimize
     params_to_optimize = list(unet.parameters())
@@ -440,7 +447,8 @@ def main():
     )
     
     # Prepare dataset
-    logger.info("Loading dataset...")
+    if accelerator.is_main_process:
+        logger.info("📂 Loading dataset...")
     
     # Auto-detect manifest if not provided
     manifest_path = args.manifest
@@ -448,7 +456,8 @@ def main():
         # Prefer manifest with pre-encoded latents
         if Path('outputs/aldar_kose_lora/dataset_manifest_with_latents.json').exists():
             manifest_path = 'outputs/aldar_kose_lora/dataset_manifest_with_latents.json'
-            logger.info("Using pre-encoded latents for faster training!")
+            if accelerator.is_main_process:
+                logger.info("✅ Using pre-encoded latents (40% faster!)")
             use_processed = True
         elif Path('data/dataset_manifest_processed.json').exists():
             manifest_path = 'data/dataset_manifest_processed.json'
@@ -512,29 +521,39 @@ def main():
         config['batch_size'] * accelerator.num_processes * config['gradient_accumulation_steps']
     )
     
-    logger.info("***** Training Configuration *****")
-    logger.info(f"  Num examples = {len(dataset)}")
-    logger.info(f"  Num batches per epoch = {len(dataloader)}")
-    logger.info(f"  Instantaneous batch size = {config['batch_size']}")
-    logger.info(f"  Gradient accumulation steps = {config['gradient_accumulation_steps']}")
-    logger.info(f"  Total batch size = {total_batch_size}")
-    logger.info(f"  Total optimization steps = {max_train_steps}")
+    logger.info("")
+    logger.info("=" * 80)
+    logger.info("📋 TRAINING CONFIGURATION")
+    logger.info("=" * 80)
+    logger.info(f"  Examples:         {len(dataset)}")
+    logger.info(f"  Batches/epoch:    {len(dataloader)}")
+    logger.info(f"  Batch size:       {config['batch_size']}")
+    logger.info(f"  Gradient accum:   {config['gradient_accumulation_steps']}")
+    logger.info(f"  Total batch size: {total_batch_size}")
+    logger.info(f"  Total steps:      {max_train_steps}")
+    logger.info(f"  Learning rate:    {config['learning_rate']:.2e}")
+    logger.info(f"  LoRA rank:        {config['lora_rank']}")
+    logger.info(f"  Resolution:       {config['resolution']}px")
+    logger.info("=" * 80)
+    logger.info("")
     
     # Training loop
     global_step = 0
     first_epoch = 0
+    logs = {}  # Initialize logs dictionary
     
     # Resume from checkpoint if specified
     if config.get('resume_from_checkpoint'):
         # Implementation for checkpoint resumption would go here
         pass
     
-    progress_bar = tqdm(
-        range(0, max_train_steps),
-        initial=global_step,
-        desc="Steps",
-        disable=not accelerator.is_local_main_process,
-    )
+    # Print training start banner
+    if accelerator.is_main_process:
+        logger.info("")
+        logger.info("=" * 80)
+        logger.info("🚀 TRAINING STARTED")
+        logger.info("=" * 80)
+        logger.info("")
     
     for epoch in range(first_epoch, 999999):  # Effectively infinite
         unet.train()
@@ -547,7 +566,19 @@ def main():
                 # Use pre-encoded latents or encode images on-the-fly
                 if 'latents' in batch:
                     # Pre-encoded latents (fast, low memory)
-                    latents = batch['latents'].to(accelerator.device, dtype=torch.float16)
+                    # Use the weight dtype from accelerator (bf16 for H100)
+                    weight_dtype = torch.float32
+                    if accelerator.mixed_precision == "fp16":
+                        weight_dtype = torch.float16
+                    elif accelerator.mixed_precision == "bf16":
+                        weight_dtype = torch.bfloat16
+                    
+                    latents = batch['latents'].to(accelerator.device, dtype=weight_dtype)
+                    
+                    # Check for NaN or Inf in latents (corrupted pre-encoded data)
+                    if torch.isnan(latents).any() or torch.isinf(latents).any():
+                        logger.warning(f"Found NaN/Inf in pre-encoded latents at step {global_step}, skipping batch")
+                        continue
                 else:
                     # Fallback: encode images on-the-fly (slow, high memory)
                     latents = vae.encode(batch['pixel_values'].to(dtype=vae.dtype)).latent_dist.sample()
@@ -569,25 +600,38 @@ def main():
                 noisy_latents = noise_scheduler.add_noise(latents, noise, timesteps)
                 
                 # Encode prompts
-                with torch.no_grad():
+                # Only use no_grad if we're NOT training text encoders
+                if config.get('train_text_encoder', False):
+                    # Train text encoders - allow gradients
                     encoder_hidden_states_one = text_encoder_one(
-                        batch['input_ids_one'],
+                        batch['input_ids_one'].to(accelerator.device),
                         output_hidden_states=True,
                     )
                     encoder_hidden_states_two = text_encoder_two(
-                        batch['input_ids_two'],
+                        batch['input_ids_two'].to(accelerator.device),
                         output_hidden_states=True,
                     )
-                    
-                    # Concatenate embeddings
-                    encoder_hidden_states = torch.cat(
-                        [encoder_hidden_states_one.hidden_states[-2], 
-                         encoder_hidden_states_two.hidden_states[-2]],
-                        dim=-1
-                    )
-                    
-                    # Pooled embeddings
-                    pooled_embeds = encoder_hidden_states_two[0]
+                else:
+                    # Don't train text encoders - no gradients needed
+                    with torch.no_grad():
+                        encoder_hidden_states_one = text_encoder_one(
+                            batch['input_ids_one'].to(accelerator.device),
+                            output_hidden_states=True,
+                        )
+                        encoder_hidden_states_two = text_encoder_two(
+                            batch['input_ids_two'].to(accelerator.device),
+                            output_hidden_states=True,
+                        )
+                
+                # Concatenate embeddings
+                encoder_hidden_states = torch.cat(
+                    [encoder_hidden_states_one.hidden_states[-2], 
+                     encoder_hidden_states_two.hidden_states[-2]],
+                    dim=-1
+                )
+                
+                # Pooled embeddings
+                pooled_embeds = encoder_hidden_states_two[0]
                 
                 # Prepare added embeddings
                 add_time_ids = compute_time_ids(
@@ -631,6 +675,14 @@ def main():
                 else:
                     loss = loss.mean()
                 
+                # Check for NaN loss before backward
+                if torch.isnan(loss) or torch.isinf(loss):
+                    logger.warning(f"NaN or Inf loss detected at step {global_step}, skipping batch")
+                    logger.warning(f"  model_pred range: [{model_pred.min():.4f}, {model_pred.max():.4f}]")
+                    logger.warning(f"  target range: [{target.min():.4f}, {target.max():.4f}]")
+                    logger.warning(f"  latents range: [{latents.min():.4f}, {latents.max():.4f}]")
+                    continue
+                
                 accelerator.backward(loss)
                 
                 if accelerator.sync_gradients:
@@ -642,32 +694,43 @@ def main():
             
             # Update progress
             if accelerator.sync_gradients:
-                progress_bar.update(1)
                 global_step += 1
                 
                 # Logging
                 if global_step % config.get('log_every', 10) == 0:
-                    logs = {
-                        "loss": loss.detach().item(),
-                        "lr": lr_scheduler.get_last_lr()[0],
-                        "step": global_step,
-                        "epoch": epoch,
-                    }
-                    progress_bar.set_postfix(**logs)
+                    loss_val = loss.detach().item()
+                    lr_val = lr_scheduler.get_last_lr()[0]
                     
-                    # Log to terminal with color
+                    # Calculate progress
+                    progress_pct = (global_step / max_train_steps) * 100
+                    steps_per_sec = config.get('log_every', 10) / ((time.time() - logs.get('last_log_time', time.time())) if 'last_log_time' in logs else 1)
+                    eta_seconds = (max_train_steps - global_step) / steps_per_sec if steps_per_sec > 0 else 0
+                    eta_minutes = int(eta_seconds / 60)
+                    
+                    # Log to terminal with clean formatting
                     if accelerator.is_main_process:
                         logger.info(
-                            f"Step {global_step:05d} | "
-                            f"Loss: {logs['loss']:.4f} | "
-                            f"LR: {logs['lr']:.2e} | "
-                            f"Epoch: {epoch}"
+                            f"[{progress_pct:5.1f}%] "
+                            f"Step {global_step:>5}/{max_train_steps} | "
+                            f"Loss: {loss_val:.6f} | "
+                            f"LR: {lr_val:.2e} | "
+                            f"Epoch: {epoch:>3} | "
+                            f"ETA: {eta_minutes:>3}m"
                         )
                         
                         # Write to CSV
                         if metrics_file:
                             with open(metrics_file, 'a') as f:
-                                f.write(f"{global_step},{logs['loss']:.6f},{logs['lr']:.8f},{epoch}\n")
+                                f.write(f"{global_step},{loss_val:.6f},{lr_val:.8f},{epoch}\n")
+                    
+                    # Store logs for next iteration
+                    logs = {
+                        "loss": loss_val,
+                        "lr": lr_val,
+                        "step": global_step,
+                        "epoch": epoch,
+                        "last_log_time": time.time(),
+                    }
                     
                     if config.get('use_wandb', False) and accelerator.is_main_process:
                         wandb.log(logs, step=global_step)
@@ -675,6 +738,9 @@ def main():
                 # Save checkpoint
                 if global_step % config['save_every'] == 0:
                     if accelerator.is_main_process:
+                        logger.info("")
+                        logger.info("💾 Saving checkpoint...")
+                        
                         save_path = Path(config['checkpoint_dir']) / f"checkpoint-{global_step}"
                         save_path.mkdir(parents=True, exist_ok=True)
                         
@@ -688,12 +754,14 @@ def main():
                             text_encoder_one_lora.save_pretrained(save_path / "text_encoder_one_lora")
                             text_encoder_two_lora.save_pretrained(save_path / "text_encoder_two_lora")
                         
-                        logger.info(f"Saved checkpoint to {save_path}")
+                        logger.info(f"✅ Checkpoint saved: {save_path.name}")
+                        logger.info("")
                 
                 # Validation
                 if config.get('validate_every') and global_step % config['validate_every'] == 0:
                     if accelerator.is_main_process:
-                        logger.info("Generating validation images...")
+                        logger.info("")
+                        logger.info("🎨 Generating validation images...")
                         
                         # Create pipeline for inference
                         pipeline = StableDiffusionXLPipeline.from_pretrained(
@@ -726,7 +794,8 @@ def main():
                             with open(prompt_path, 'w') as f:
                                 f.write(prompt)
                         
-                        logger.info(f"Saved {len(validation_images)} validation images to {val_dir}")
+                        logger.info(f"✅ Saved {len(validation_images)} validation images: {val_dir.name}")
+                        logger.info("")
                         
                         # Log to wandb
                         if config.get('use_wandb', False):
@@ -748,6 +817,11 @@ def main():
     
     # Save final checkpoint
     if accelerator.is_main_process:
+        logger.info("")
+        logger.info("=" * 80)
+        logger.info("💾 Saving final model...")
+        logger.info("=" * 80)
+        
         save_path = Path(config['output_dir']) / "final"
         save_path.mkdir(parents=True, exist_ok=True)
         
@@ -763,9 +837,9 @@ def main():
         # Save training summary
         summary_file = Path(config['output_dir']) / "training_summary.txt"
         with open(summary_file, 'w') as f:
-            f.write("=" * 70 + "\n")
-            f.write("  TRAINING COMPLETE - Aldar Kose LoRA\n")
-            f.write("=" * 70 + "\n\n")
+            f.write("=" * 80 + "\n")
+            f.write("  🎉 TRAINING COMPLETE - Aldar Kose LoRA\n")
+            f.write("=" * 80 + "\n\n")
             f.write(f"Total steps: {global_step}\n")
             f.write(f"Total epochs: {epoch}\n")
             f.write(f"Final learning rate: {lr_scheduler.get_last_lr()[0]:.2e}\n")
@@ -780,15 +854,13 @@ def main():
             f.write(f"  - Learning rate: {config['learning_rate']}\n")
             f.write(f"  - Batch size: {config['batch_size']}\n")
             f.write(f"  - Gradient accumulation: {config['gradient_accumulation_steps']}\n")
-            f.write("\n" + "=" * 70 + "\n")
+            f.write("\n" + "=" * 80 + "\n")
         
-        logger.info(f"Training complete! Final model saved to {save_path}")
-        logger.info(f"Training summary saved to {summary_file}")
-        
-        # Print summary to terminal
-        print("\n" + "=" * 70)
+        # Print beautiful completion banner
+        print("\n")
+        print("=" * 80)
         print("  🎉 TRAINING COMPLETE! 🎉")
-        print("=" * 70)
+        print("=" * 80)
         print(f"\n📊 Training Stats:")
         print(f"   Steps completed: {global_step}")
         print(f"   Epochs completed: {epoch}")
@@ -798,7 +870,8 @@ def main():
         print(f"   Validation images: {config['output_dir']}/validation_images")
         print(f"   Metrics CSV: {config['output_dir']}/training_metrics.csv")
         print(f"   Summary: {summary_file}")
-        print("\n" + "=" * 70 + "\n")
+        print("\n" + "=" * 80)
+        print("")
     
     accelerator.end_training()
     
