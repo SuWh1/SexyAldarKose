@@ -39,7 +39,9 @@ export function HackathonHeader() {
   }, [scrolled]);
 
   return (
-    <div className="sticky top-0 z-[1100] w-full py-2">
+    <div className={`sticky top-0 z-[1100] w-full transition-all duration-300 ${
+      scrolled ? 'py-2' : 'py-0'
+    }`}>
       <div className="w-full grid place-items-center">
         <div className={`transition-all duration-300 ease-out ${
           scrolled ? 'max-w-4xl' : 'max-w-7xl'
