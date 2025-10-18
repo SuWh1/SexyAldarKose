@@ -42,21 +42,24 @@ export function HackathonHeader() {
     <div className={`sticky top-0 z-[1100] w-full transition-all duration-300 ${
       scrolled ? 'py-2' : 'py-0'
     }`}>
-      <div className="w-full grid place-items-center">
-        <div className={`transition-all duration-300 ease-out ${
-          scrolled ? 'max-w-4xl' : 'max-w-7xl'
-        } w-full px-4 sm:px-6 lg:px-8`}>
-          <header 
-            className={`transition-all duration-300 ease-out ${
-              scrolled
-                ? 'backdrop-blur-md rounded-full py-3 px-8 shadow-lg border' 
-                : 'backdrop-blur-none rounded-none py-2 px-8 border-b'
-            }`}
-            style={{ 
-              backgroundColor: scrolled ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 1)', 
-              borderColor: 'rgba(153, 153, 153, 0.2)' 
-            }}
-          >
+      <div className={`w-full transition-all duration-300 ${
+        scrolled ? '' : 'border-b'
+      }`} style={{ borderColor: scrolled ? 'transparent' : 'rgba(153, 153, 153, 0.2)' }}>
+        <div className="w-full grid place-items-center">
+          <div className={`transition-all duration-300 ease-out ${
+            scrolled ? 'max-w-4xl' : 'max-w-7xl'
+          } w-full px-4 sm:px-6 lg:px-8`}>
+            <header 
+              className={`transition-all duration-300 ease-out ${
+                scrolled
+                  ? 'backdrop-blur-md rounded-full py-3 px-8 shadow-lg border' 
+                  : 'backdrop-blur-none rounded-none py-2 px-8'
+              }`}
+              style={{ 
+                backgroundColor: scrolled ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 1)', 
+                borderColor: scrolled ? 'rgba(153, 153, 153, 0.2)' : 'transparent'
+              }}
+            >
             <div className={`flex items-center transition-all duration-200 ${
               scrolled ? 'justify-between' : 'justify-between'
             }`}>
@@ -150,6 +153,7 @@ export function HackathonHeader() {
             </div>
           </header>
         </div>
+      </div>
       </div>
     </div>
   );
