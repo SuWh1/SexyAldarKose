@@ -60,54 +60,41 @@ logger = logging.getLogger(__name__)
 # Configuration
 TRIGGER_TOKEN = "aldar_kose_man"
 
+
 SCENE_BREAKDOWN_SYSTEM_PROMPT = """You are an expert storyboard artist specializing in clear, simple visual storytelling.
 
-Your task is to break down a story into 6-10 distinct, SIMPLE scenes for image generation.
+Your task is to break down a story into 6-10 very SIMPLE scenes optimized for image generation.
 
 CRITICAL RULES:
-1. Keep descriptions SIMPLE and CLEAR - focus on ONE main action per scene
-2. Each scene should be DIFFERENT - show story PROGRESSION
-3. DO NOT mention clothing, outfits, costumes, or physical appearance
-4. Use basic camera angles: wide shot, close-up, medium shot
-5. Include simple lighting: daylight, sunset, indoor lighting
-6. Make scenes visually distinct from each other
+1. Return only the minimal JSON described below (do NOT include camera or mood fields)
+2. Keep each "description" SHORT and CLEAR (action + location; max ~10 words)
+3. Prefer CLOSE, FRONT-FACING shots (close-up / portrait) so the character is recognizable
+4. Minimum 6 scenes, maximum 10 scenes
+5. Do NOT mention clothing, outfits, costumes, or physical appearance
+6. Make scenes visually distinct and show clear story progression
 
 The character is "aldar_kose_man" - a clever trickster from Kazakh folklore.
 
-DESCRIPTION STYLE - Keep it SHORT and SIMPLE:
-✅ GOOD (simple, clear):
-- "aldar_kose_man riding horse, steppe landscape, wide shot"
-- "aldar_kose_man smiling, close-up, sunset lighting"
-- "aldar_kose_man entering yurt, medium shot, warm light"
+DESCRIPTION EXAMPLES (very simple):
+- "aldar_kose_man riding horse, steppe, close-up, front-facing"
+- "aldar_kose_man dismounting horse, yurt nearby, close-up"
+- "aldar_kose_man entering yurt, close-up, warm light"
 
-❌ BAD (too complex, verbose):
-- "aldar_kose_man atop his noble steed, silhouetted against the vast and infinite steppe stretching to the horizon"
-- "aldar_kose_man with a mischievous expression reflecting his cunning nature as he approaches the merchant"
+BAD EXAMPLES (too zoomed out / verbose):
+- "aldar_kose_man atop his noble steed, silhouetted against the vast steppe stretching to the horizon"
 
-Story Structure:
-- Opening: Establish where character is
-- Middle: Show the action/journey
-- Ending: Show the result
+Return a JSON object EXACTLY in this format (no extra text):
+{
+    "num_scenes": <number>,
+    "reasoning": "<one short sentence explaining why this number>",
+    "scenes": [
+        {"frame": 1, "description": "aldar_kose_man riding horse, steppe, close-up, front-facing"},
+        {"frame": 2, "description": "aldar_kose_man dismounting horse, yurt nearby, close-up"}
+    ]
+}
 
-Return your response as a JSON array:
-[
-    {
-        "frame": 1,
-        "description": "aldar_kose_man riding horse, steppe landscape, wide shot",
-        "camera": "wide shot",
-        "mood": "traveling"
-    },
-    {
-        "frame": 2,
-        "description": "aldar_kose_man approaching yurt, medium shot, sunset",
-        "camera": "medium shot",
-        "mood": "arriving"
-    }
-]
-
-Remember: SIMPLE descriptions work best for image generation. Focus on ACTION + LOCATION + CAMERA ANGLE."""
-
-
+Remember: DO NOT include separate "camera" or "mood" fields. Put any necessary framing (close-up/front-facing) inside the single `description` string.
+"""
 class PromptStoryboardGenerator:
     """
     Converts a user's story description into a complete storyboard
@@ -145,35 +132,26 @@ class PromptStoryboardGenerator:
             List of scene descriptions with metadata
         """
         logger.info(f"Analyzing story and determining optimal number of scenes (max: {max_frames})...")
-        
         user_prompt = f"""Break down the following story into a storyboard with the OPTIMAL number of scenes.
 
 Story: "{story}"
 
 INSTRUCTIONS:
 - Decide how many scenes needed (minimum 6, maximum {max_frames})
-- Simple stories: 6-7 scenes, Medium: 8-9 scenes, Complex: 10 scenes
-- Keep descriptions SHORT and SIMPLE (max 10-12 words each)
-- Focus on: ACTION + LOCATION + CAMERA ANGLE only
+- Prefer CLOSE, FRONT-FACING shots (close-up / portrait) so the character is recognizable
+- Keep each description SHORT and SIMPLE (action + location + framing keywords, ~10 words)
 - Each scene must be DIFFERENT and show PROGRESSION
 - Use "aldar_kose_man" as the character identifier
-- NO clothing, costumes, or complex metaphors
+- DO NOT include separate camera or mood fields in the JSON output
 
-EXAMPLES OF SIMPLE DESCRIPTIONS:
-✅ "aldar_kose_man riding horse, steppe landscape, wide shot"
-✅ "aldar_kose_man entering yurt, medium shot, sunset lighting"
-✅ "aldar_kose_man laughing, close-up, warm light"
-❌ "aldar_kose_man atop noble steed silhouetted against infinite horizon" (too complex!)
-
-Return JSON object:
+Return JSON object exactly:
 {{
-  "num_scenes": <number>,
-  "reasoning": "<why this number>",
-  "scenes": [
-    {{"frame": 1, "description": "simple action + location + camera", "camera": "wide shot", "mood": "one word"}},
-    {{"frame": 2, "description": "...", "camera": "...", "mood": "..."}},
-    ... ({max_frames} max)
-  ]
+    "num_scenes": <number>,
+    "reasoning": "<one short sentence>",
+    "scenes": [
+        {{"frame": 1, "description": "aldar_kose_man riding horse, steppe, close-up, front-facing"}},
+        {{"frame": 2, "description": "aldar_kose_man dismounting horse, yurt nearby, close-up"}}
+    ]
 }}"""
 
         try:
@@ -187,61 +165,61 @@ Return JSON object:
                 max_tokens=2000,
                 response_format={"type": "json_object"}
             )
-            
+
             content = response.choices[0].message.content
-            
+
             # Parse JSON response
             try:
                 result = json.loads(content)
-                
+
                 # Extract metadata if present
                 num_scenes_decided = result.get("num_scenes", None)
                 reasoning = result.get("reasoning", None)
-                
+
                 if reasoning:
                     logger.info(f"GPT-4 reasoning: {reasoning}")
                     logger.info(f"GPT-4 decided on {num_scenes_decided} scenes")
-                
-                # Handle different possible response structures
-                if isinstance(result, dict) and "scenes" in result:
+
+                # Expect the canonical structure with scenes array; fall back safely
+                if isinstance(result, dict) and "scenes" in result and isinstance(result["scenes"], list):
                     scenes = result["scenes"]
-                elif isinstance(result, dict) and "frames" in result:
-                    scenes = result["frames"]
                 elif isinstance(result, list):
                     scenes = result
                 else:
-                    # If it's a dict with numbered keys, try to extract
-                    scenes = list(result.values())
-                
+                    # If unexpected, try to extract list-like values
+                    scenes = []
+                    for v in result.values() if isinstance(result, dict) else []:
+                        if isinstance(v, list):
+                            scenes = v
+                            break
+
                 # Validate we got scenes
                 if not scenes or len(scenes) == 0:
                     logger.error("No scenes generated!")
                     logger.error(f"Response: {content}")
                     raise ValueError("OpenAI returned no scenes")
-                
+
                 # Validate within limits
                 if len(scenes) > max_frames:
                     logger.warning(f"Got {len(scenes)} scenes, trimming to max {max_frames}")
                     scenes = scenes[:max_frames]
-                
+
                 if len(scenes) < 6:
                     logger.warning(f"Got only {len(scenes)} scenes, minimum is 6. Padding...")
                     for i in range(len(scenes), 6):
                         scenes.append({
                             "frame": i + 1,
-                            "description": f"aldar_kose_man character continuation of story, scene {i+1}",
-                            "camera": "medium shot",
-                            "mood": "narrative"
+                            "description": f"aldar_kose_man continuation scene {i+1}"
                         })
-                
+
                 logger.info(f"✓ Successfully generated {len(scenes)} scenes")
                 return scenes
-                
+
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse JSON response: {e}")
                 logger.error(f"Response content: {content}")
                 raise
-                
+
         except Exception as e:
             logger.error(f"OpenAI API error: {e}")
             raise
@@ -262,18 +240,23 @@ Return JSON object:
         prompts = []
         
         for scene in scenes:
-            # Extract description
+            # Extract description and mood
             if isinstance(scene, dict):
                 description = scene.get("description", scene.get("prompt", str(scene)))
+                mood = scene.get("mood", "")
             else:
                 description = str(scene)
+                mood = ""
             
             # Ensure trigger token is present
             if TRIGGER_TOKEN not in description.lower():
                 description = f"{TRIGGER_TOKEN} {description}"
             
-            # Add quality tags
-            prompt = f"{description}, high quality, detailed, 3D animation, professional render"
+            # Build prompt with mood if available
+            if mood:
+                prompt = f"{description}, {mood} mood, high quality, detailed, 3D animation, professional render"
+            else:
+                prompt = f"{description}, high quality, detailed, 3D animation, professional render"
             
             prompts.append(prompt)
         
@@ -287,7 +270,7 @@ Return JSON object:
         base_seed: int = 42,
         num_inference_steps: int = 40,
         guidance_scale: float = 7.5,
-        max_attempts: int = 3,
+        max_attempts: int = 2,
     ) -> List[Image.Image]:
         """
         Complete pipeline: story -> scenes -> images
@@ -337,8 +320,6 @@ Return JSON object:
             if isinstance(scene, dict):
                 print(f"\nFrame {i}:")
                 print(f"  Description: {scene.get('description', scene.get('prompt', ''))}")
-                print(f"  Camera: {scene.get('camera', 'N/A')}")
-                print(f"  Mood: {scene.get('mood', 'N/A')}")
             else:
                 print(f"\nFrame {i}: {scene}")
         print("=" * 60 + "\n")
