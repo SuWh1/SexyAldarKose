@@ -44,13 +44,22 @@ python-dotenv>=1.0.0
 # ======================================
 
 # Optional: For full consistency pipeline
-# Uncomment and install if using storyboard_generator.py (full features)
-# Requires 12GB+ VRAM
+# Uncomment and install if using ref_guided_storyboard.py (full features)
+# Requires 16GB+ VRAM
 
 # ControlNet preprocessors (pose/depth extraction)
-# controlnet-aux>=0.0.6
+controlnet-aux>=0.0.7
 
-# IP-Adapter (visual reference matching)
-# ip-adapter>=0.1.0
+# For IP-Adapter (facial reference matching)
+# Note: IP-Adapter requires manual installation from:
+# https://github.com/tencent-ailab/IP-Adapter
+# git clone https://github.com/tencent-ailab/IP-Adapter.git
+# cd IP-Adapter
+# pip install -e .
+
+# Additional dependencies for reference-guided mode
+insightface>=0.7.3
+onnxruntime>=1.16.0  # For face detection
 
 # Note: simple_storyboard.py works with base requirements only (8GB VRAM)
+# Note: ref_guided_storyboard.py requires above packages (16GB+ VRAM)

@@ -51,8 +51,16 @@ try:
 except ImportError:
     pass
 
-# Import the storyboard generator
+# Import the storyboard generators
 from simple_storyboard import SimplifiedStoryboardGenerator
+try:
+    from ref_guided_storyboard import ReferenceGuidedStoryboardGenerator
+    HAS_REF_GUIDED = True
+except ImportError:
+    HAS_REF_GUIDED = False
+    print("⚠️  Reference-guided generator not available (missing dependencies)")
+    print("    Install: pip install controlnet-aux")
+    print("    Fallback: Using simple storyboard generator")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -105,16 +113,21 @@ class PromptStoryboardGenerator:
         openai_api_key: str,
         lora_path: str,
         device: str = "cuda",
+        use_ref_guided: bool = False,
     ):
         """Initialize the prompt-based storyboard generator"""
         self.client = OpenAI(api_key=openai_api_key)
         self.lora_path = lora_path
         self.device = device
+        self.use_ref_guided = use_ref_guided and HAS_REF_GUIDED
         
         # Initialize the image generator (lazy loading)
         self.generator = None
         
-        logger.info("Prompt Storyboard Generator initialized")
+        if self.use_ref_guided:
+            logger.info("Prompt Storyboard Generator initialized (REFERENCE-GUIDED MODE)")
+        else:
+            logger.info("Prompt Storyboard Generator initialized (SIMPLE MODE)")
     
     def break_down_story(
         self,
@@ -342,10 +355,21 @@ Return JSON object exactly:
             logger.info("=" * 60)
             logger.info("STEP 3: Loading SDXL + LoRA model")
             logger.info("=" * 60)
-            self.generator = SimplifiedStoryboardGenerator(
-                lora_path=self.lora_path,
-                device=self.device,
-            )
+            
+            if self.use_ref_guided:
+                logger.info("Loading Reference-Guided Generator (IP-Adapter + ControlNet)...")
+                self.generator = ReferenceGuidedStoryboardGenerator(
+                    lora_path=self.lora_path,
+                    device=self.device,
+                    use_controlnet=True,
+                    use_ip_adapter=True,
+                )
+            else:
+                logger.info("Loading Simple Generator (LoRA + CLIP)...")
+                self.generator = SimplifiedStoryboardGenerator(
+                    lora_path=self.lora_path,
+                    device=self.device,
+                )
         
         # Step 4: Generate images
         logger.info("=" * 60)
@@ -467,6 +491,12 @@ Examples:
         help="Device to use (cuda/cpu)"
     )
     
+    parser.add_argument(
+        "--use-ref-guided",
+        action="store_true",
+        help="Use reference-guided mode (IP-Adapter + ControlNet for max consistency)"
+    )
+    
     args = parser.parse_args()
     
     # Get API key
@@ -503,6 +533,7 @@ Examples:
         openai_api_key=api_key,
         lora_path=args.lora_path,
         device=args.device,
+        use_ref_guided=args.use_ref_guided,
     )
     
     # Generate storyboard

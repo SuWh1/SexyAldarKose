@@ -8,21 +8,43 @@ This directory contains all the scripts for the Aldar Kose LoRA training and sto
 **Prompt-based storyboard generation** - Takes a simple story description and generates 6-10 frames automatically.
 
 ```bash
-# Interactive mode
-python scripts/prompt_storyboard.py --lora-path outputs/checkpoints/checkpoint-400
+# Simple mode (LoRA + CLIP validation) - 8-10GB VRAM
+python scripts/prompt_storyboard.py \
+    --lora-path outputs/checkpoints/checkpoint-400 \
+    --story "Aldar Kose riding his horse to his yurt at sunset"
 
-# Direct story
+# Reference-guided mode (IP-Adapter + ControlNet) - 16-20GB VRAM ⭐ BEST QUALITY
 python scripts/prompt_storyboard.py \
     --lora-path outputs/checkpoints/checkpoint-400 \
     --story "Aldar Kose riding his horse to his yurt at sunset" \
-    --num-frames 8
+    --use-ref-guided
 ```
 
 **Features:**
-- Uses OpenAI GPT-4 to break down story into scenes
-- Automatically creates diverse camera angles
-- Generates 6-10 images with character consistency
-- See: `PROMPT_STORYBOARD_GUIDE.md`
+- Uses OpenAI GPT-4 to break down story into scenes (GPT decides optimal frame count)
+- **Simple Mode**: LoRA + CLIP validation for character consistency
+- **Reference-Guided Mode**: IP-Adapter + ControlNet for maximum facial consistency
+- Generates 6-10 images with automatic quality validation
+- See: `PROMPT_STORYBOARD_GUIDE.md` and `REF_GUIDED_GUIDE.md`
+
+---
+
+### **ref_guided_storyboard.py** ⭐ NEW! Maximum Consistency
+**Reference-guided generation** with IP-Adapter + ControlNet for production-quality consistency.
+
+```bash
+python scripts/ref_guided_storyboard.py \
+    --lora-path outputs/checkpoints/checkpoint-400 \
+    --prompts-file scene_prompts.json
+```
+
+**Advanced Features:**
+- Uses first frame as facial reference for all subsequent frames
+- ControlNet (OpenPose) for pose/composition control
+- IP-Adapter for facial feature injection
+- CLIP validation (0.70 threshold, 2 retries)
+- Best for final production storyboards
+- See: `REF_GUIDED_GUIDE.md` for setup and tuning
 
 ---
 
