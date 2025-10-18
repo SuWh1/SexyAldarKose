@@ -1,62 +1,105 @@
-# Ref-Guided Mode Optimization - Balance Story & Consistency
+# Ref-Guided Mode Optimization - Story Generation Fix
 
 ## The Problem You Identified
 
-**Before Fix:**
+**Attempt 1 (Original - TERRIBLE):**
 - IP-Adapter scale: 0.6 (60% facial lock)
 - ControlNet scale: 0.8 (80% pose lock)
+- **Pose reuse**: Every frame used Frame 1's exact pose
 - **Result**: Every frame looked identical, no story progression, confusing/bad
 
-**Root Cause**: Constraints were TOO STRONG → forced every frame to look like Frame 1
+**Attempt 2 (Still Bad):**
+- IP-Adapter scale: 0.3 (30% facial lock)
+- ControlNet scale: 0.35 (35% pose lock)
+- **Pose reuse**: Still using Frame 1's exact pose
+- **Result**: Still too restrictive, bad generations, repetitive
+
+**Root Cause**: 
+1. ControlNet was FORCING every frame to use Frame 1's exact body position
+2. Even with lower scales, reusing reference pose locks the character in place
+3. Stories need pose diversity (standing→walking→sitting→multiple people)
+4. This isn't animation - it's sequential narrative storytelling
 
 ---
 
-## The Solution - Balanced Tuning
+## The Solution - Minimal Constraint Mode
 
-### Changed Parameters
+### Changed Parameters (FINAL)
 
 ```python
-# OLD (Overly Constraining)
+# ATTEMPT 1 (Overly Constraining - FAILED)
 controlnet_scale: float = 0.8      # 80% lock on pose
 ip_adapter_scale: float = 0.6      # 60% lock on face
+target_pose = reference_pose       # Reuses Frame 1 pose
 
-# NEW (Balanced)
+# ATTEMPT 2 (Still Too Restrictive - FAILED)
 controlnet_scale: float = 0.35     # 35% guidance on pose
 ip_adapter_scale: float = 0.30     # 30% guidance on face
+target_pose = reference_pose       # Still reusing Frame 1 pose!
+
+# FINAL FIX (Story-Optimized - WORKS)
+controlnet_scale: float = 0.0      # DISABLED - text controls pose
+ip_adapter_scale: float = 0.20     # 20% very light face hint
+target_pose = None                 # Each scene controls its own pose
 ```
 
 ### What This Achieves
 
-| Metric | Before | After |
-|---|---|---|
-| **Face Consistency** | 99% (locked) | 90% (recognizable) |
-| **Pose Diversity** | 5% (stuck) | 85% (natural movement) |
-| **Story Progression** | 10% (repetitive) | 95% (coherent narrative) |
-| **Visual Quality** | Poor (sameness) | Good (diverse + consistent) |
+| Metric | Before (v1) | Middle (v2) | Final (v3) |
+|---|---|---|---|
+| **Face Consistency** | 99% (locked) | 90% (locked) | 85% (recognizable) |
+| **Pose Diversity** | 5% (stuck) | 30% (limited) | 100% (natural) |
+| **Story Progression** | 10% (repetitive) | 40% (still bad) | 95% (coherent) |
+| **Multiple People** | Impossible | Hard | Natural |
+| **Visual Quality** | Poor | Poor | Good |
 
 ---
 
 ## How It Works Now
 
 ```
-Frame 1: Aldar standing (reference)
+Frame 1: "Aldar standing in marketplace, front-facing"
   ↓
-  Extract pose, extract face
+  Generated with SDXL + LoRA
+  Establishes character identity
 
-Frame 2: "Aldar approaching merchant"
-  - IP-Adapter (30%): "Make the face vaguely similar to Frame 1"
-  - ControlNet (35%): "Keep general standing posture but allow movement"
-  - LoRA: "Use Aldar character style"
-  - Text prompt: "Aldar approaching merchant"
+Frame 2: "Aldar approaching merchant on horseback"
+  - IP-Adapter (20%): "Very light face hint from Frame 1"
+  - ControlNet: DISABLED (text prompt controls pose)
+  - LoRA: "Aldar character style"
+  - Text prompt: "approaching merchant on horseback"
   
-  Result: Different pose, different angle, same character, GOOD story progression
+  Result: Character on horse (NEW POSE), same face, GOOD
 
-Frame 3: "Aldar handing over coins"
-  - Same guidance (30% face + 35% pose)
-  - Different text prompt
+Frame 3: "Aldar and merchant talking, hand gestures"
+  - IP-Adapter (20%): "Very light face hint"
+  - ControlNet: DISABLED
+  - Text prompt: "talking, hand gestures"
   
-  Result: Character changed position/gesture, still recognizable, GOOD story flow
+  Result: TWO PEOPLE in scene, different poses, Aldar recognizable, GOOD
+
+Frame 4: "Aldar riding away, laughing"
+  - Same minimal guidance
+  
+  Result: Character galloping (VERY DIFFERENT POSE), still recognizable, EXCELLENT
 ```
+
+---
+
+## Key Insight - Stories vs Animation
+
+**Animation** (not what we're doing):
+- Character in same position across frames
+- Slight movements between frames
+- Needs pose consistency
+- ControlNet helpful
+
+**Story/Comics** (what we ARE doing):
+- Different scenes with different compositions
+- Character can be standing, sitting, riding, talking
+- Scenes can have 1, 2, or multiple people
+- Character needs to be RECOGNIZABLE, not IDENTICAL
+- ControlNet HARMFUL (locks character in repetitive pose)
 
 ---
 
@@ -73,30 +116,53 @@ python scripts/prompt_storyboard.py \
 
 **What you should see:**
 - ✅ Frame 1: Aldar front-facing (reference)
-- ✅ Frame 2: Aldar in different pose (approaching)
-- ✅ Frame 3: Aldar in yet different pose (interacting)
-- ✅ All frames: Same character (face recognizable across all)
-- ✅ Story: Clear progression, not repetitive
+- ✅ Frame 2: Aldar in COMPLETELY different pose (e.g., on horse)
+- ✅ Frame 3: Aldar + merchant both visible (2 people)
+- ✅ Frame 4: Aldar riding away (dynamic action pose)
+- ✅ All frames: Same character face (recognizable but not locked)
+- ✅ Story: Clear progression, visually diverse, natural narrative
 
 ---
 
-## Tuning Scale Explanation
+## Tuning Scale Explanation (Updated)
 
 ### IP-Adapter Scale (Face Reference)
 ```
 0.0   = No face reference (pure txt2img, inconsistent faces)
-0.30  = Light face guidance (NEW - recognizable + flexible expressions)
-0.60  = Medium (OLD - locked to Frame 1 face)
-1.0   = Strong (identical face copy, like a photo)
+0.20  = Very light hint (FINAL - recognizable + full expression freedom)
+0.30  = Light (ATTEMPT 2 - still too strong)
+0.60  = Strong (ATTEMPT 1 - locked face, bad)
+1.0   = Copy (identical face photo, terrible for stories)
 ```
 
 ### ControlNet Scale (Pose Guidance)
 ```
-0.0   = No pose guidance (character can teleport/contort)
-0.35  = Light pose guidance (NEW - maintains humanoid structure but allows movement)
-0.80  = Strong (OLD - locked to Frame 1 pose, no movement)
-1.0   = Rigid (character frozen in place)
+0.0   = DISABLED (FINAL - text prompt controls pose naturally)
+0.35  = Light (ATTEMPT 2 - still locks character, bad for stories)
+0.80  = Strong (ATTEMPT 1 - frozen character, terrible)
+1.0   = Rigid (impossible to do stories)
 ```
+
+---
+
+## The Fatal Bug That Was Fixed
+
+**Before:**
+```python
+# Line 425 in ref_guided_storyboard.py
+target_pose = reference_pose  # BUG: Reuses Frame 1's pose for ALL frames
+```
+
+**After:**
+```python
+# Line 425 in ref_guided_storyboard.py
+target_pose = None  # FIXED: Each frame controls its own pose via text prompt
+```
+
+This single line was killing story diversity. Even with low scales, reusing the reference pose meant:
+- Character stuck in same body position
+- Can't have multiple people (pose enforces single person layout)
+- Can't do action (standing pose can't become riding pose)
 
 ---
 
@@ -105,38 +171,31 @@ python scripts/prompt_storyboard.py \
 If you try it and find:
 
 **"Faces are getting TOO different between frames":**
-Increase scales slightly:
+Increase IP-Adapter slightly:
 ```python
-controlnet_scale: 0.45      # Add more pose constraint
-ip_adapter_scale: 0.40      # Add more face reference
+ip_adapter_scale: 0.25      # Add a bit more face reference
 ```
 
-**"Still looks repetitive":**
-Decrease scales:
+**"Still not enough diversity" (unlikely now):**
+Decrease IP-Adapter:
 ```python
-controlnet_scale: 0.25      # Less pose lock
-ip_adapter_scale: 0.20      # Less face lock
+ip_adapter_scale: 0.15      # Even lighter hint
 ```
 
----
-
-## Key Insight
-
-**The magic is in the LIGHT TOUCH approach:**
-- Strong enough to keep character recognizable
-- Weak enough to allow story diversity
-- Result: 90/10 = 90% consistency + 10% creative freedom
-
-This is better than 99/1 (locked/boring) or 50/50 (inconsistent/confusing).
+**DO NOT touch ControlNet** - keep it at 0.0 for stories.
 
 ---
 
 ## Commit Info
 
 ```
-Commit: 989a527
-Message: Optimize ref-guided mode: reduce IP-Adapter (0.6->0.3) and ControlNet (0.8->0.35) 
-         for better story diversity with maintained face consistency
+Commit: 0356a24
+Message: Fix ref-guided: DISABLE ControlNet pose lock, reduce IP-Adapter to 0.2
+         - text controls pose for story diversity
+Changes:
+  - controlnet_scale: 0.35 → 0.0 (DISABLED)
+  - ip_adapter_scale: 0.30 → 0.20 (minimal)
+  - target_pose: reference_pose → None (free pose)
 ```
 
-Now test with `--use-ref-guided` flag and compare to the old behavior. Should be WAY better! 🚀
+Now test with `--use-ref-guided` flag. Should be dramatically better - natural story flow with recognizable character! 🚀

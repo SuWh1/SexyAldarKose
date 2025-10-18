@@ -158,6 +158,7 @@ class PromptStoryboardGenerator:
         self,
         story: str,
         max_frames: int = 10,
+        temperature: float = 0.7,
     ) -> List[Dict]:
         """
         Use OpenAI to break down a story into individual scenes
@@ -165,6 +166,7 @@ class PromptStoryboardGenerator:
         Args:
             story: The user's story description
             max_frames: Maximum number of frames (GPT decides optimal count up to this limit)
+            temperature: GPT-4 creativity (0.0=deterministic, 1.0=creative)
             
         Returns:
             List of scene descriptions with metadata
@@ -214,7 +216,7 @@ REMEMBER: Frame 1 is the REFERENCE - it MUST clearly show the face from the fron
                     {"role": "system", "content": SCENE_BREAKDOWN_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.7,
+                temperature=temperature,  # Use provided temperature for determinism/creativity control
                 max_tokens=2000,
                 response_format={"type": "json_object"}
             )
