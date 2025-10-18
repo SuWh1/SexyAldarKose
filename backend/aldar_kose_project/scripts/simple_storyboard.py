@@ -25,8 +25,11 @@ from tqdm import tqdm
 from diffusers import (
     StableDiffusionXLPipeline,
     StableDiffusionXLImg2ImgPipeline,
+    UNet2DConditionModel,
 )
-from transformers import CLIPProcessor, CLIPModel
+from diffusers.models.attention_processor import LoRAAttnProcessor2_0
+from transformers import CLIPProcessor, CLIPModel, CLIPTextModel, CLIPTextModelWithProjection
+from peft import PeftModel
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -50,28 +53,58 @@ class SimplifiedStoryboardGenerator:
         
         logger.info("Initializing Simplified Storyboard Generator...")
         
-        # Load base pipeline
-        logger.info("Loading SDXL base model...")
+        # Use cache directory from training
+        cache_dir = "/root/.cache/huggingface/hub"
+        
+        # Load base pipeline from cache
+        logger.info("Loading SDXL base model from cache...")
         self.txt2img_pipe = StableDiffusionXLPipeline.from_pretrained(
             base_model,
             torch_dtype=dtype,
-            variant="fp16",
-            use_safetensors=True,
+            cache_dir=cache_dir,
         )
         self.txt2img_pipe.to(device)
         
-        # Load LoRA
+        # Load PEFT LoRA weights if provided
         if lora_path:
-            logger.info(f"Loading LoRA from {lora_path}...")
-            self.txt2img_pipe.load_lora_weights(lora_path)
-            self.txt2img_pipe.fuse_lora(lora_scale=0.8)
+            lora_path = Path(lora_path)
+            logger.info(f"Loading PEFT LoRA from {lora_path}...")
+            
+            # Load UNet LoRA
+            unet_lora_path = lora_path / "unet_lora"
+            if unet_lora_path.exists():
+                logger.info(f"  Loading UNet LoRA...")
+                self.txt2img_pipe.unet = PeftModel.from_pretrained(
+                    self.txt2img_pipe.unet,
+                    str(unet_lora_path),
+                )
+            
+            # Load Text Encoder LoRAs
+            text_encoder_one_path = lora_path / "text_encoder_one_lora"
+            text_encoder_two_path = lora_path / "text_encoder_two_lora"
+            
+            if text_encoder_one_path.exists():
+                logger.info(f"  Loading Text Encoder 1 LoRA...")
+                self.txt2img_pipe.text_encoder = PeftModel.from_pretrained(
+                    self.txt2img_pipe.text_encoder,
+                    str(text_encoder_one_path),
+                )
+            
+            if text_encoder_two_path.exists():
+                logger.info(f"  Loading Text Encoder 2 LoRA...")
+                self.txt2img_pipe.text_encoder_2 = PeftModel.from_pretrained(
+                    self.txt2img_pipe.text_encoder_2,
+                    str(text_encoder_two_path),
+                )
+            
+            logger.info("  ✓ LoRA weights loaded!")
         
         # Memory optimizations
         self.txt2img_pipe.enable_attention_slicing()
         self.txt2img_pipe.enable_vae_slicing()
         
         # Img2img pipeline for subsequent frames
-        logger.info("Loading img2img pipeline...")
+        logger.info("Creating img2img pipeline...")
         self.img2img_pipe = StableDiffusionXLImg2ImgPipeline(
             vae=self.txt2img_pipe.vae,
             text_encoder=self.txt2img_pipe.text_encoder,
