@@ -35,9 +35,6 @@ ENV/
 .DS_Store
 
 # Training Data (images can be large)
-data/images/*
-data/captions/*
-data/processed_images/*
 !data/images/.gitkeep
 !data/captions/.gitkeep
 !data/processed_images/.gitkeep
