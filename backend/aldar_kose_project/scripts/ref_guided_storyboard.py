@@ -378,6 +378,7 @@ class ReferenceGuidedStoryboardGenerator:
         controlnet_scale: float = 0.0,
         ip_adapter_scale: float = 0.20,
         output_dir: str = "./ref_guided_storyboard",
+        use_random_seed: bool = False,  # NEW: Enable randomness for creative mode
     ) -> List[Image.Image]:
         """
         Generate a complete storyboard with reference-guided consistency
@@ -393,6 +394,9 @@ class ReferenceGuidedStoryboardGenerator:
         - controlnet_scale: 0.0 (disabled) - stories need pose diversity, not repetition
         - ip_adapter_scale: 0.20 (was 0.6→0.3) - very light face hint only
         - Result: Character recognizable + full story freedom (multiple people, varied poses)
+        
+        Args:
+            use_random_seed: If True, adds randomness to seeds (for temp > 0 creative mode)
         """
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
@@ -442,7 +446,16 @@ class ReferenceGuidedStoryboardGenerator:
             for attempt in range(max_retries):
                 logger.info(f"  Attempt {attempt + 1}/{max_retries}...")
                 
-                seed = base_seed + (idx * 1000) + (attempt * 10)
+                # Seed calculation with optional randomness
+                if use_random_seed:
+                    # Add random component for creative mode (temperature > 0)
+                    import random
+                    random_offset = random.randint(0, 9999)
+                    seed = base_seed + (idx * 1000) + (attempt * 10) + random_offset
+                    logger.info(f"  Creative mode: seed {seed} (random offset: {random_offset})")
+                else:
+                    # Deterministic seed for reproducibility (temperature = 0)
+                    seed = base_seed + (idx * 1000) + (attempt * 10)
                 
                 # CRITICAL: DO NOT reuse reference pose - each scene has different composition
                 # Stories need pose diversity (standing, walking, sitting, multiple people, etc.)
