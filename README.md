@@ -13,7 +13,7 @@ git clone https://github.com/SuWh1/SexyAldarKose.git
 cd SexyAldarKose/backend/aldar_kose_project
 
 # 2. Install dependencies
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 pip install -r requirements_inference.txt
 
 # 3. Set API key
