@@ -384,7 +384,7 @@ Examples:
     logger.info("")
     logger.info("✅ Generated files:")
     
-    timestamp = datetime.now().strftime('%Y%m%d')
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     output_dir = f"outputs/terminal_generation_{timestamp}"
     
     logger.info(f"   📁 Location: {output_dir}")
