@@ -85,7 +85,7 @@ Story Prompt → GPT-4 Scene Breakdown → SDXL + LoRA Generation → CLIP Valid
 | Metric | Value |
 |--------|-------|
 | Face Consistency | 85-90% (CLIP ≥0.70) |
-| Generation Time | 4-5 min (cached), 8-9 min (first run) |
+| Generation Time | 1-2 min |
 | Model Size | 10 MB (LoRA only) |
 | Training Time | ~1 hour (A100) |
 
