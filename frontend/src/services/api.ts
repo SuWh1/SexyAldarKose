@@ -44,31 +44,45 @@ export interface HealthResponse {
  * Check if the API server is healthy and ready
  */
 export async function checkHealth(): Promise<HealthResponse> {
-  const response = await fetch(`${API_URL}/health`);
-  if (!response.ok) {
-    throw new Error(`Health check failed: ${response.statusText}`);
+  try {
+    const response = await fetch(`${API_URL}/health`);
+    if (!response.ok) {
+      throw new Error(`Health check failed: ${response.statusText}`);
+    }
+    return response.json();
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Network error: Unable to connect to backend. Your VM IP may be closed from external API requests.');
+    }
+    throw error;
   }
-  return response.json();
 }
 
 /**
  * Generate a story from a text prompt
  */
 export async function generateStory(request: StoryRequest): Promise<StoryResponse> {
-  const response = await fetch(`${API_URL}/generate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
+  try {
+    const response = await fetch(`${API_URL}/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: response.statusText }));
-    throw new Error(error.error || `Generation failed: ${response.statusText}`);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(error.error || `Generation failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Network error: Unable to connect to backend. Your VM IP may be closed from external API requests.');
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 /**

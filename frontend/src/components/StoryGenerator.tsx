@@ -43,7 +43,13 @@ export function StoryGenerator() {
 
       setStory(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate story');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate story';
+      // Check if it's a network/CORS error
+      if (errorMessage.includes('fetch') || errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        setError('Unfortunately, your VM IP is closed from external API requests, so the backend could not be reached. Please check your network configuration or run the backend locally.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
