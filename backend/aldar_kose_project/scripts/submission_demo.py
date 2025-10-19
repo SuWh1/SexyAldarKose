@@ -385,10 +385,10 @@ Examples:
     )
     
     if generation_dirs:
-        actual_output_dir = generation_dirs[0].relative_to(Path.cwd())
+        actual_output_dir = str(generation_dirs[0])
     else:
         # Fallback (shouldn't happen)
-        actual_output_dir = Path(f"outputs/terminal_generation_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        actual_output_dir = f"outputs/terminal_generation_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     
     # Summary
     logger.info("")
