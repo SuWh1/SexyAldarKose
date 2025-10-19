@@ -1,0 +1,203 @@
+# ===============================================
+# Aldar Kose Project - Git Ignore
+# ===============================================
+
+# ===============================================
+# Python
+# ===============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+imgs/
+
+# ===============================================
+# Virtual Environments
+# ===============================================
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+.conda/
+
+# ===============================================
+# IDEs and Editors
+# ===============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===============================================
+# Environment Variables
+# ===============================================
+.env
+.env.local
+.env.*.local
+*.env
+
+# ===============================================
+# Generated Images and Outputs (IMPORTANT!)
+# ===============================================
+# All generated storyboard frames
+backend/aldar_kose_project/outputs/terminal_generation_*/
+backend/aldar_kose_project/outputs/checkpoints/
+backend/aldar_kose_project/outputs/aldar_kose_lora/
+
+# Training data images (if large dataset)
+backend/aldar_kose_project/data/images/
+backend/aldar_kose_project/data/processed_images/
+backend/aldar_kose_project/raw_images/
+
+# Keep folder structure but ignore image files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.webp
+
+# Exception: Keep sample images in documentation if needed
+!docs/**/*.png
+!docs/**/*.jpg
+!public/**/*.png
+!public/**/*.jpg
+
+# ===============================================
+# Model Checkpoints and Weights
+# ===============================================
+# Downloaded models from S3
+backend/aldar_kose_project/outputs/checkpoints/
+# LoRA weights
+*.safetensors
+*.bin
+*.ckpt
+*.pth
+*.pt
+
+# Exception: Keep small config files
+!**/adapter_config.json
+!**/config.json
+
+# ===============================================
+# Logs and Monitoring
+# ===============================================
+backend/aldar_kose_project/logs/
+*.log
+wandb/
+.wandb/
+tensorboard_logs/
+
+# ===============================================
+# Jupyter Notebooks
+# ===============================================
+.ipynb_checkpoints
+*.ipynb
+
+# ===============================================
+# Testing
+# ===============================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# ===============================================
+# Documentation Build
+# ===============================================
+docs/_build/
+site/
+
+# ===============================================
+# OS and Temporary Files
+# ===============================================
+*.tmp
+*.temp
+*.cache
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===============================================
+# Package Manager
+# ===============================================
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ===============================================
+# Large Files (Git LFS candidates)
+# ===============================================
+# Models and large datasets
+*.tar.gz
+*.zip
+*.7z
+*.rar
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+
+# ===============================================
+# Specific Project Files
+# ===============================================
+# Caption files (if regenerated)
+backend/aldar_kose_project/data/captions/*.txt
+
+# S3 download temporary files
+*.part
+*.download
+
+# Output reports (keep only latest)
+backend/aldar_kose_project/outputs/*/report.json
+backend/aldar_kose_project/outputs/*/scene_breakdown.json
+backend/aldar_kose_project/outputs/*/sdxl_prompts.json
+
+# ===============================================
+# Frontend (React/Vite)
+# ===============================================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+
+# ===============================================
+# Notes
+# ===============================================
+# This .gitignore ensures:
+# 1. No large image files are committed (saves repo size)
+# 2. Model checkpoints are not tracked (download from S3 instead)
+# 3. Generated outputs are excluded (reproducible with seed=42)
+# 4. Environment secrets (.env) are never committed
+# 5. OS-specific files are ignored
+#
+# To include sample images for README, place them in docs/ folder

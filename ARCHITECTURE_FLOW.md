@@ -12,7 +12,8 @@
         ┌──────────────────────────────────────┐
         │  1. DEPENDENCY CHECK                 │
         │  ✓ torch, transformers, diffusers   │
-        │  ✓ peft, openai, boto3              │
+        │  ✓ peft, openai                     │
+        │  (NO boto3/AWS CLI needed!)         │
         └──────────────────────┬───────────────┘
                                │
                                ▼
@@ -23,8 +24,9 @@
                                │
                                ▼
         ┌──────────────────────────────────────┐
-        │  3. AWS S3 MODEL DOWNLOAD            │
-        │  boto3.client('s3').download()      │
+        │  3. S3 MODEL DOWNLOAD (Public HTTPS) │
+        │  urllib.request.urlretrieve()       │
+        │  From: aldarkose.s3.amazonaws.com   │
         │  Downloads to:                      │
         │  outputs/checkpoints/checkpoint-1000│
         └──────────────────────┬───────────────┘
@@ -296,8 +298,10 @@ Non-trainable (frozen): ~2.596B
 ├────────────────────────────────────┤
 │                                    │
 │ 1. Check dependencies              │
+│    (NO boto3/AWS CLI needed!)      │
 │ 2. Verify OpenAI API key           │
-│ 3. Download LoRA from AWS S3       │
+│ 3. Download LoRA from public S3    │
+│    via HTTPS (urllib)              │
 │                                    │
 └──────────────────┬─────────────────┘
                    │
@@ -618,8 +622,9 @@ submission_demo.py
 │     "Set OPENAI_API_KEY in .env"
 │
 ├─ S3 download fails?
-│  └─ Check AWS credentials
-│     "Run: aws configure"
+│  └─ Check internet connection
+│     "Verify network access to:"
+│     "aldarkose.s3.amazonaws.com"
 │
 ├─ Model loading fails?
 │  └─ Check disk space

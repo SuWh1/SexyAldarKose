@@ -1,17 +1,17 @@
 # ===============================================
 # Aldar Kose Storyboard Generator - Inference Only
 # ===============================================
-# Minimal dependencies for running story generation
+# Essential dependencies for running story generation
 # Install with: pip install -r requirements_inference.txt
 
 # ===============================================
-# Core PyTorch (required)
+# Core PyTorch (REQUIRED)
 # ===============================================
 torch>=2.0.0
 torchvision>=0.15.0
 
 # ===============================================
-# Hugging Face Ecosystem (required)
+# Hugging Face Ecosystem (REQUIRED)
 # ===============================================
 transformers>=4.35.0
 diffusers>=0.25.0
@@ -20,68 +20,60 @@ peft>=0.7.0
 safetensors>=0.4.0
 
 # ===============================================
-# Image Processing (required)
+# Image Processing (REQUIRED)
 # ===============================================
 opencv-python>=4.8.0
 Pillow>=10.0.0
 
 # ===============================================
-# AWS S3 Access (required for model download)
-# ===============================================
-boto3>=1.26.0
-botocore>=1.29.0
-
-# ===============================================
-# AI APIs (required)
+# AI APIs (REQUIRED)
 # ===============================================
 openai>=1.0.0
 python-dotenv>=1.0.0
 
 # ===============================================
-# Text Processing (required)
+# Text Processing (REQUIRED)
 # ===============================================
 numpy>=1.24.0
 PyYAML>=6.0
 
 # ===============================================
-# Utilities (required)
+# Utilities (REQUIRED)
 # ===============================================
 tqdm>=4.66.0
-ftfy>=6.1.0
 
 # ===============================================
-# Reference-Guided Generation (REQUIRED for best quality)
+# ControlNet Support (REQUIRED)
 # ===============================================
-# For ControlNet pose detection
 controlnet-aux>=0.0.7
 onnxruntime>=1.16.0
 
 # ===============================================
-# Pose Detection / Anomaly Detection (OPTIONAL)
+# OPTIONAL Dependencies (for monitoring/debugging)
 # ===============================================
-# Note: mediapipe requires Python <3.13
-# For Python 3.13, skip this and use face detection only
-# mediapipe>=0.10.0
+# Uncomment if you want training monitoring:
+# wandb>=0.16.0
+# tensorboard>=2.15.0
 
 # ===============================================
-# Monitoring (optional)
+# Installation Notes
 # ===============================================
-wandb>=0.16.0
-tensorboard>=2.15.0
-
-# ===============================================
-# Notes:
-# ===============================================
-# PyTorch Installation:
-# For CUDA 12.1 support:
+# IMPORTANT: Install PyTorch with CUDA support first!
+#
+# For CUDA 12.1 (recommended):
 #   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 #
-# For CPU only:
+# For CUDA 11.8:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+#
+# For CPU only (not recommended - very slow):
 #   pip install torch torchvision
 #
-# For Mac (Metal GPU):
+# For Mac with Metal GPU:
 #   pip install torch torchvision
 #
-# Installation steps:
-# 1. Install PyTorch first (see above)
-# 2. Then: pip install -r requirements_inference.txt
+# Then install remaining dependencies:
+#   pip install -r requirements_inference.txt
+#
+# Verify installation:
+#   python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')"

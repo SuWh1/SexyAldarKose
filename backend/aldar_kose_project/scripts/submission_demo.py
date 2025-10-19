@@ -148,30 +148,51 @@ def verify_dependencies() -> bool:
     logger.info("=" * 70)
     
     required_packages = [
-        'torch',
-        'transformers',
-        'diffusers',
-        'peft',
-        'PIL',
-        'openai'
+        ('torch', 'torch'),
+        ('transformers', 'transformers'),
+        ('diffusers', 'diffusers'),
+        ('peft', 'peft'),
+        ('PIL', 'Pillow'),
+        ('openai', 'openai'),
+        ('cv2', 'opencv-python'),
+        ('numpy', 'numpy'),
+        ('tqdm', 'tqdm'),
+        ('yaml', 'PyYAML'),
+        ('dotenv', 'python-dotenv'),
     ]
     
     missing = []
-    for package in required_packages:
+    for import_name, package_name in required_packages:
         try:
-            __import__(package)
-            logger.info(f"  ✅ {package}")
+            __import__(import_name)
+            logger.info(f"  ✅ {package_name}")
         except ImportError:
-            logger.warning(f"  ❌ {package} (missing)")
-            missing.append(package)
+            logger.warning(f"  ❌ {package_name} (missing)")
+            missing.append(package_name)
+    
+    # Check for optional but recommended packages
+    optional_packages = [
+        ('controlnet_aux', 'controlnet-aux'),
+        ('onnxruntime', 'onnxruntime'),
+    ]
+    
+    for import_name, package_name in optional_packages:
+        try:
+            __import__(import_name)
+            logger.info(f"  ✅ {package_name} (optional)")
+        except ImportError:
+            logger.info(f"  ⚠️  {package_name} (optional - recommended for ControlNet)")
     
     if missing:
-        logger.error(f"\n❌ Missing packages: {', '.join(missing)}")
-        logger.error(f"   Install with: pip install {' '.join(missing)}")
+        logger.error(f"\n❌ Missing required packages: {', '.join(missing)}")
+        logger.error(f"   Install with:")
+        logger.error(f"   pip install -r requirements_inference.txt")
+        logger.error(f"\n   Or individually:")
+        logger.error(f"   pip install {' '.join(missing)}")
         return False
     
     logger.info("")
-    logger.info("✅ All dependencies installed!")
+    logger.info("✅ All required dependencies installed!")
     return True
 
 
