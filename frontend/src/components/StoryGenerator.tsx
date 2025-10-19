@@ -195,7 +195,7 @@ export function StoryGenerator() {
               {/* Error Display */}
               {error && (
                 <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', border: '1px solid rgba(255, 0, 0, 0.3)' }}>
-                  <p style={{ color: 'rgba(255, 100, 100, 1)' }}>❌ {error}</p>
+                  <p style={{ color: 'rgba(255, 100, 100, 1)' }}>{error}</p>
                 </div>
               )}
 
