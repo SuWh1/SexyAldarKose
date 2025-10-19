@@ -376,6 +376,20 @@ Examples:
     if not run_inference(prompt, seed=args.seed, temp=TEMP, ref_guided=ref_guided):
         sys.exit(1)
     
+    # Find the most recent generation folder
+    output_root = Path("outputs")
+    generation_dirs = sorted(
+        [d for d in output_root.glob("terminal_generation_*") if d.is_dir()],
+        key=lambda x: x.stat().st_mtime,
+        reverse=True
+    )
+    
+    if generation_dirs:
+        actual_output_dir = generation_dirs[0].relative_to(Path.cwd())
+    else:
+        # Fallback (shouldn't happen)
+        actual_output_dir = Path(f"outputs/terminal_generation_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    
     # Summary
     logger.info("")
     logger.info("=" * 70)
@@ -384,12 +398,9 @@ Examples:
     logger.info("")
     logger.info("✅ Generated files:")
     
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_dir = f"outputs/terminal_generation_{timestamp}"
-    
-    logger.info(f"   📁 Location: {output_dir}")
-    logger.info(f"   🖼️  Images: {output_dir}/frame_*.png")
-    logger.info(f"   📝 Metadata: {output_dir}/scene_breakdown.json")
+    logger.info(f"   📁 Location: {actual_output_dir}")
+    logger.info(f"   🖼️  Images: {actual_output_dir}/frame_*.png")
+    logger.info(f"   📝 Metadata: {actual_output_dir}/scene_breakdown.json")
     logger.info("")
     logger.info("✨ To regenerate identical output, use:")
     logger.info(f'   python scripts/submission_demo.py "{prompt}" --seed {args.seed} --skip-download')
