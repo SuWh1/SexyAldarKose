@@ -25,7 +25,7 @@ $env:OPENAI_API_KEY="sk-your-key"    # Windows
 python scripts/submission_demo.py
 ```
 
-**Time:** 8-9 minutes → outputs 6-frame storyboard
+Outputs 6-frame storyboard
 
 ## 🌟 Features
 
