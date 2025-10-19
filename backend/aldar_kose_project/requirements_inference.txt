@@ -1,0 +1,88 @@
+# ===============================================
+# Aldar Kose Storyboard Generator - Inference Only
+# ===============================================
+# Minimal dependencies for running story generation
+# Install with: pip install -r requirements_inference.txt
+
+# ===============================================
+# Core PyTorch (required)
+# ===============================================
+torch>=2.0.0
+torchvision>=0.15.0
+
+# ===============================================
+# Hugging Face Ecosystem (required)
+# ===============================================
+transformers>=4.35.0
+diffusers>=0.25.0
+accelerate>=0.25.0
+peft>=0.7.0
+safetensors>=0.4.0
+
+# ===============================================
+# Image Processing (required)
+# ===============================================
+opencv-python>=4.8.0
+Pillow>=10.0.0
+
+# ===============================================
+# AWS S3 Access (required for model download)
+# ===============================================
+boto3>=1.26.0
+botocore>=1.29.0
+
+# ===============================================
+# AI APIs (required)
+# ===============================================
+openai>=1.0.0
+python-dotenv>=1.0.0
+
+# ===============================================
+# Text Processing (required)
+# ===============================================
+numpy>=1.24.0
+PyYAML>=6.0
+
+# ===============================================
+# Utilities (required)
+# ===============================================
+tqdm>=4.66.0
+ftfy>=6.1.0
+
+# ===============================================
+# Reference-Guided Generation (REQUIRED for best quality)
+# ===============================================
+# For IP-Adapter (facial reference consistency)
+controlnet-aux>=0.0.7
+insightface>=0.7.3
+onnxruntime>=1.16.0
+
+# ===============================================
+# Pose Detection / Anomaly Detection (OPTIONAL)
+# ===============================================
+# Note: mediapipe requires Python <3.13
+# For Python 3.13, skip this and use face detection only
+# mediapipe>=0.10.0
+
+# ===============================================
+# Monitoring (optional)
+# ===============================================
+wandb>=0.16.0
+tensorboard>=2.15.0
+
+# ===============================================
+# Notes:
+# ===============================================
+# PyTorch Installation:
+# For CUDA 12.1 support:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#
+# For CPU only:
+#   pip install torch torchvision
+#
+# For Mac (Metal GPU):
+#   pip install torch torchvision
+#
+# Installation steps:
+# 1. Install PyTorch first (see above)
+# 2. Then: pip install -r requirements_inference.txt
