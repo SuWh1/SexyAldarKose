@@ -52,9 +52,8 @@ ftfy>=6.1.0
 # ===============================================
 # Reference-Guided Generation (REQUIRED for best quality)
 # ===============================================
-# For IP-Adapter (facial reference consistency)
+# For ControlNet pose detection
 controlnet-aux>=0.0.7
-insightface>=0.7.3
 onnxruntime>=1.16.0
 
 # ===============================================

@@ -338,22 +338,35 @@ Examples:
         logger.error("   3. Run script again")
         sys.exit(1)
     
-    # Step 3: Download model from AWS (unless skipped)
-    if not args.skip_download:
-        if not download_model_from_aws(args.bucket, S3_MODEL_PATH, LOCAL_MODEL_PATH):
-            logger.error("\n💡 If model is already local, use: --skip-download")
-            sys.exit(1)
-    else:
+    # Step 3: Check if model exists locally
+    model_exists = Path(LOCAL_MODEL_PATH).exists() and list(Path(LOCAL_MODEL_PATH).glob("**/adapter_model.safetensors"))
+    
+    if model_exists and args.skip_download:
         logger.info("")
         logger.info("=" * 70)
         logger.info("⏭️  SKIPPING AWS DOWNLOAD (--skip-download)")
         logger.info("=" * 70)
-        logger.info(f"Using local model: {LOCAL_MODEL_PATH}")
-        
-        if not Path(LOCAL_MODEL_PATH).exists():
-            logger.error(f"❌ Local model not found at: {LOCAL_MODEL_PATH}")
-            logger.error("   Run without --skip-download to download from AWS")
+        logger.info(f"✅ Using cached local model: {LOCAL_MODEL_PATH}")
+    elif model_exists and not args.skip_download:
+        logger.info("")
+        logger.info("=" * 70)
+        logger.info("✅ MODEL ALREADY DOWNLOADED")
+        logger.info("=" * 70)
+        logger.info(f"Using cached model: {LOCAL_MODEL_PATH}")
+    elif not model_exists:
+        logger.info("")
+        logger.info("=" * 70)
+        logger.info("⏬ MODEL NOT FOUND - DOWNLOADING FROM AWS")
+        logger.info("=" * 70)
+        if not download_model_from_aws(args.bucket, S3_MODEL_PATH, LOCAL_MODEL_PATH):
+            logger.error("\n❌ Download failed")
+            logger.error("   Make sure AWS credentials are configured: aws configure")
             sys.exit(1)
+    
+    # Final verification
+    if not Path(LOCAL_MODEL_PATH).exists():
+        logger.error(f"❌ Model not available at: {LOCAL_MODEL_PATH}")
+        sys.exit(1)
     
     # Step 4: Get story prompt
     prompt = args.prompt if args.prompt else get_user_prompt()
