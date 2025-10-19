@@ -25,7 +25,7 @@ $env:OPENAI_API_KEY="sk-your-key"    # Windows
 python scripts/submission_demo.py
 ```
 
-Outputs 6-frame storyboard
+Outputs mnulti-frame storyboard
 
 ## 🌟 Features
 
