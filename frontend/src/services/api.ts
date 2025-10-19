@@ -52,7 +52,7 @@ export async function checkHealth(): Promise<HealthResponse> {
     return response.json();
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error('Unfortunately we cannot reach your backend. Your VM IP is closed from external API requests.');
+      throw new Error('Unfortunately we cannot reach your VM. Your VM IP is closed from external API requests.');
     }
     throw error;
   }
@@ -79,7 +79,7 @@ export async function generateStory(request: StoryRequest): Promise<StoryRespons
     return response.json();
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error('Network error: Unable to connect to backend. Your VM IP may be closed from external API requests.');
+      throw new Error('Unfortunately we cannot reach your VM. Your VM IP is closed from external API requests.');
     }
     throw error;
   }
