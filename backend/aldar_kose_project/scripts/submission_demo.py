@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Submission Demo Script
-Downloads LoRA model from AWS S3 and runs deterministic inference with ref-guided generation.
+Downloads LoRA model from AWS S3 (via public HTTPS URLs) and runs deterministic inference.
+
+🎯 NO AWS CONFIGURATION NEEDED - Downloads via public HTTPS URLs!
 
 Usage:
     # Interactive mode (prompts for story)
@@ -10,11 +12,11 @@ Usage:
     # With story prompt
     python scripts/submission_demo.py "Aldar Kose tricks a greedy merchant"
     
-    # With custom AWS bucket
-    python scripts/submission_demo.py "Aldar wins a horse race" --bucket my-custom-bucket
-    
     # Skip download (model already local)
     python scripts/submission_demo.py "Aldar at bazaar" --skip-download
+    
+    # Simple mode (faster, less VRAM)
+    python scripts/submission_demo.py "Aldar adventure" --no-ref-guided
 """
 
 import os
@@ -22,6 +24,7 @@ import sys
 import argparse
 import logging
 import subprocess
+import urllib.request
 from pathlib import Path
 from datetime import datetime
 import json
@@ -45,88 +48,91 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Constants
-AWS_BUCKET = "aldarkose"
-S3_MODEL_PATH = "checkpoint-1000"  # s3://aldarkose/checkpoint-1000/
+S3_BUCKET_URL = "https://aldarkose.s3.amazonaws.com"  # Public S3 URL (no auth needed!)
+S3_MODEL_PATH = "checkpoint-1000"
 LOCAL_MODEL_PATH = "outputs/checkpoints/checkpoint-1000"
 TEMP = 0.0  # Fully deterministic
 SEED = 42
 REF_GUIDED = True  # Reference-guided mode for best consistency
 DEFAULT_PROMPT = "Aldar Kose, the clever trickster, outwits a greedy merchant in an exciting bazaar confrontation"
 
+# Files to download (from S3)
+MODEL_FILES = {
+    "unet_lora/adapter_config.json": "adapter_config.json",
+    "unet_lora/adapter_model.safetensors": "adapter_model.safetensors",
+    "text_encoder_one_lora/adapter_config.json": "adapter_config.json",
+    "text_encoder_one_lora/adapter_model.safetensors": "adapter_model.safetensors",
+    "text_encoder_two_lora/adapter_config.json": "adapter_config.json",
+    "text_encoder_two_lora/adapter_model.safetensors": "adapter_model.safetensors",
+}
 
-def download_model_from_aws(bucket: str, s3_path: str, local_path: str) -> bool:
-    """Download LoRA model from AWS S3 using boto3."""
+
+def download_model_from_s3(base_url: str, model_path: str, local_path: str) -> bool:
+    """Download LoRA model from public S3 URL (NO AWS credentials needed!)."""
     logger.info("")
     logger.info("=" * 70)
-    logger.info("📦 DOWNLOADING MODEL FROM AWS")
+    logger.info("📦 DOWNLOADING MODEL FROM S3")
     logger.info("=" * 70)
-    logger.info(f"Bucket: s3://{bucket}/")
-    logger.info(f"Source: {s3_path}/")
+    logger.info(f"Source: {base_url}/{model_path}/")
     logger.info(f"Local: {local_path}/")
+    logger.info("")
+    logger.info("🔓 No AWS credentials needed - using public HTTPS URLs!")
     
     # Create local directory
-    Path(local_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(local_path).mkdir(parents=True, exist_ok=True)
     
     try:
-        import boto3
-        from botocore.exceptions import ClientError
-        
-        logger.info("")
-        logger.info("Connecting to S3...")
-        
-        # Create S3 client
-        s3_client = boto3.client('s3')
-        
-        # List objects in the S3 path
-        logger.info(f"Listing objects from s3://{bucket}/{s3_path}/")
-        
-        paginator = s3_client.get_paginator('list_objects_v2')
-        pages = paginator.paginate(Bucket=bucket, Prefix=s3_path)
-        
         downloaded_count = 0
-        for page in pages:
-            if 'Contents' not in page:
-                logger.warning(f"No objects found at s3://{bucket}/{s3_path}/")
-                return False
+        total_size = 0
+        
+        # Download files
+        for s3_file, local_file in MODEL_FILES.items():
+            s3_full_path = f"{model_path}/{s3_file}"
+            url = f"{base_url}/{s3_full_path}"
             
-            for obj in page['Contents']:
-                key = obj['Key']
-                # Skip directory markers
-                if key.endswith('/'):
-                    continue
+            # Create local file path
+            local_file_path = Path(local_path) / s3_file
+            local_file_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            logger.info(f"  ⬇️  {s3_file}")
+            
+            try:
+                # Download with progress
+                urllib.request.urlretrieve(
+                    url,
+                    str(local_file_path),
+                    reporthook=lambda block_num, block_size, total_size: None
+                )
                 
-                # Get local file path
-                relative_path = key[len(s3_path):].lstrip('/')
-                local_file = Path(local_path) / relative_path
-                local_file.parent.mkdir(parents=True, exist_ok=True)
+                file_size = local_file_path.stat().st_size / (1024 * 1024)  # MB
+                total_size += file_size
+                downloaded_count += 1
+                logger.info(f"       ✓ {file_size:.1f} MB")
                 
-                logger.info(f"  ⬇️  Downloading: {key}")
-                
-                try:
-                    s3_client.download_file(bucket, key, str(local_file))
-                    downloaded_count += 1
-                except ClientError as e:
-                    logger.error(f"Failed to download {key}: {e}")
-                    return False
+            except urllib.error.URLError as e:
+                logger.error(f"  ❌ Failed to download: {str(e)}")
+                return False
+            except Exception as e:
+                logger.error(f"  ❌ Error: {str(e)}")
+                return False
         
         if downloaded_count == 0:
-            logger.error(f"No files downloaded from s3://{bucket}/{s3_path}/")
+            logger.error(f"No files downloaded from {base_url}/{model_path}/")
             return False
         
         logger.info("")
         logger.info(f"✅ Downloaded {downloaded_count} files successfully!")
+        logger.info(f"   Total size: {total_size:.1f} MB")
         logger.info(f"   Location: {local_path}")
         
         # Verify download
-        if not Path(local_path).exists():
-            logger.error(f"❌ Model path does not exist: {local_path}")
+        adapter_files = list(Path(local_path).glob("**/adapter_model.safetensors"))
+        if len(adapter_files) < 3:
+            logger.error(f"❌ Expected 3 adapter files, found {len(adapter_files)}")
             return False
         
         return True
         
-    except ImportError:
-        logger.error("❌ boto3 not found. Please install: pip install boto3")
-        return False
     except Exception as e:
         logger.error(f"❌ Error downloading model: {str(e)}")
         import traceback
@@ -147,8 +153,7 @@ def verify_dependencies() -> bool:
         'diffusers',
         'peft',
         'PIL',
-        'openai',
-        'boto3'
+        'openai'
     ]
     
     missing = []
@@ -292,16 +297,9 @@ Examples:
     )
     
     parser.add_argument(
-        '--bucket',
-        type=str,
-        default=AWS_BUCKET,
-        help=f'AWS S3 bucket (default: {AWS_BUCKET})'
-    )
-    
-    parser.add_argument(
         '--skip-download',
         action='store_true',
-        help='Skip AWS download (use existing local model)'
+        help='Skip S3 download (use existing local model)'
     )
     
     parser.add_argument(
@@ -356,11 +354,11 @@ Examples:
     elif not model_exists:
         logger.info("")
         logger.info("=" * 70)
-        logger.info("⏬ MODEL NOT FOUND - DOWNLOADING FROM AWS")
+        logger.info("⬇️  MODEL NOT FOUND - DOWNLOADING FROM S3")
         logger.info("=" * 70)
-        if not download_model_from_aws(args.bucket, S3_MODEL_PATH, LOCAL_MODEL_PATH):
+        if not download_model_from_s3(S3_BUCKET_URL, S3_MODEL_PATH, LOCAL_MODEL_PATH):
             logger.error("\n❌ Download failed")
-            logger.error("   Make sure AWS credentials are configured: aws configure")
+            logger.error("   Check your internet connection and try again")
             sys.exit(1)
     
     # Final verification
