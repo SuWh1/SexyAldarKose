@@ -18,11 +18,22 @@ VRAM Requirements:
     - Recommended: 24GB+ (full quality)
 """
 
+# Suppress warnings early
+import warnings
+import os
+import sys
+
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+# Suppress library logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['ABSL_MIN_LOG_LEVEL'] = '3'
+
 import argparse
 import json
 import logging
-import os
-import sys
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
@@ -145,11 +156,15 @@ class ReferenceGuidedStoryboardGenerator:
         self.controlnet_pipe = None
         if self.use_controlnet:
             logger.info("Loading ControlNet (OpenPose)...")
-            controlnet = ControlNetModel.from_pretrained(
-                controlnet_model,
-                torch_dtype=dtype,
-                cache_dir=cache_dir,
-            )
+            # Suppress ControlNet model loading warnings
+            with warnings.catch_warnings():
+                warnings.filterwarnings('ignore', message='.*diffusion_pytorch_model.*')
+                warnings.filterwarnings('ignore', message='.*Defaulting to unsafe.*')
+                controlnet = ControlNetModel.from_pretrained(
+                    controlnet_model,
+                    torch_dtype=dtype,
+                    cache_dir=cache_dir,
+                )
             
             self.controlnet_pipe = StableDiffusionXLControlNetPipeline(
                 vae=self.base_pipe.vae,
@@ -193,8 +208,12 @@ class ReferenceGuidedStoryboardGenerator:
         
         # Step 5: Load CLIP for consistency validation
         logger.info("Loading CLIP for consistency validation...")
-        self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").to(device)
-        self.clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
+        # Suppress CLIP processor warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', message='.*use_fast.*')
+            warnings.filterwarnings('ignore', message='.*slow image processor.*')
+            self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").to(device)
+            self.clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
         
         # Memory optimizations
         self.base_pipe.enable_attention_slicing()
